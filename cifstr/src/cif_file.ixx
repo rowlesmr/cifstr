@@ -48,6 +48,15 @@ namespace row {
                     throw std::out_of_range(std::format("Tag {0} not found.", t));
                 }
             }
+            const bool get_values(const std::string& t, std::vector<std::string>& val) const noexcept {
+                if (t == tag) {
+                    val = values;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
 
             bool has_tag(const std::string& t) const noexcept {
                 return t == tag;
@@ -97,15 +106,26 @@ namespace row {
                 return i;
             }
 
+            const std::vector<std::string>& get_value(const std::string& t) const noexcept(false) {
+                return get_values(t);
+            }
+            const bool get_value(const std::string& t, std::vector<std::string>& val) const noexcept {
+                return get_values(t, val);
+            }
+
             const std::vector<std::string>& get_values(const std::string& t) const noexcept(false) {
                 size_t i = find_tag(t);
                 if (i != SIZE_MAX)
                     return lpairs[i].get_values();
                 throw std::out_of_range(std::format("Tag {0} not found.", t));
             }
-
-            const std::vector<std::string>& get_value(const std::string& t) const noexcept(false) {
-                return get_values(t);
+            const bool get_values(const std::string& t, std::vector<std::string>& val) const noexcept {
+                size_t i = find_tag(t);
+                if (i != SIZE_MAX) {
+                    val = lpairs[i].get_values();
+                    return true;
+                }
+                return false;
             }
 
             bool remove_item(const std::string& t) {
@@ -146,7 +166,7 @@ namespace row {
             Pair(std::string t, std::string v)
                 : tag{ std::move(t) }, value{ std::move(v) } {}
 
-            const std::vector<std::string>& get_value() const noexcept{
+            const std::vector<std::string>& get_value() const noexcept {
                 return value;
             }
 
@@ -156,6 +176,16 @@ namespace row {
                 }
                 else {
                     throw std::out_of_range(std::format("Tag {0} not found.", t));
+                }
+            }
+
+            const bool get_value(const std::string& t, std::vector<std::string>& val) const noexcept {
+                if (has_tag(t)) {
+                    val = value;
+                    return true;
+                }
+                else {
+                    return false;
                 }
             }
 
@@ -211,6 +241,18 @@ namespace row {
                     return std::get_if<Loop>(&data)->get_values(t);
                 }
                 throw std::out_of_range(std::format("Tag {0} not found.", t));
+            }
+
+            const bool get_value(const std::string& t, std::vector<std::string>& val) const noexcept {
+                if (is_pair()) {
+                    val = std::get_if<Pair>(&data)->get_value(t);
+                    return true;
+                }
+                else if (is_loop()) {
+                    val = std::get_if<Loop>(&data)->get_values(t);
+                    return true;
+                }
+                return false;
             }
 
             bool is_loop() const noexcept {
@@ -278,6 +320,16 @@ namespace row {
             }
 
             const std::vector<std::string>& get_value(const std::string& t) const noexcept(false) {
+                ItemIndex idx = find_tag(t);
+                try {
+                    return get_value(idx);
+                }
+                catch ([[maybe_unused]] std::runtime_error& e) {
+                    throw std::out_of_range(std::format("Tag \"{0}\" not found.", t));
+                }
+            }
+
+            const bool get_value(const std::string& t, std::vector<std::string>& val) const noexcept {
                 ItemIndex idx = find_tag(t);
                 try {
                     return get_value(idx);
