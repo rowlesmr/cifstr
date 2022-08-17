@@ -12,18 +12,21 @@
 #include <algorithm>
 #include <optional>
 #include <stdexcept>
+#include <string_view>
 
 #include "ctre/ctre.hpp"
 
-import cif;
-import util;
 import logger;
+import pdqciflib;
+
+
 
 
 export module cifstr;
 
 
 using namespace row;
+
 
 #ifdef _DEBUG
 static Logger logger{ Logger::Level::DEBUG };
@@ -35,7 +38,7 @@ static constexpr double as_B{ 8 * std::numbers::pi * std::numbers::pi };
 
 static constexpr std::array NA_values{ ".", "?" };
 
-static constexpr std::array elements
+static constexpr const std::array<std::string_view, 100> elements
 { "Ac", "Ag", "Al", "Am", "Ar", "As", "At", "Au", "Ba", "B",
   "Be", "Bi", "Br", "Ca", "Cd", "C",  "Ce", "Cl", "Co", "Cr",
   "Cs", "Cu", "Dy", "Er", "Eu", "F",  "Fe", "Fr", "Ga", "Gd",
@@ -47,9 +50,9 @@ static constexpr std::array elements
   "Te", "Th", "Tl", "Ti", "Tm", "W",  "U",  "V",  "Xe", "Y",
   "Yb", "Zn", "Zr", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "D" };
 
-static constexpr std::array water{ "Wat", "WAT", "wat" };
+static constexpr const std::array<std::string_view, 3> water{ "Wat", "WAT", "wat" };
 
-static constexpr std::array allowed_atoms
+static constexpr const std::array<std::string_view, 212> allowed_atoms
 { "D",    "H",    "H-1",  "D-1",  "He",   "Li",   "Li+1", "Be",  "Be+2",  "B",
   "C",    "N",    "O",    "O-1",  "O-2",  "F",    "F-1",  "Ne",  "Na",   "Na+1",
   "Mg",   "Mg+2", "Al",   "Al+3", "Si",   "Si+4", "P",    "S",   "Cl",   "Cl-1",
@@ -239,37 +242,68 @@ public:
 
     Vec3(double u = 0.0, double v = 0.0, double w = 0.0)
         : x{ u }, y{ v }, z{ w }{}
+
+
+    Vec3 cross_product(Vec3 other) {
+        return Vec3(y * other.z - z * other.y,
+                    z * other.x - x * other.z,
+                    x * other.y - y * other.x);
+    }
+    Vec3 cross(Vec3 other) {
+        return cross_product(other);
+    }
+    double dot_product(Vec3 other) {
+        return x * other.x + y * other.y + z * other.z;
+    }
+    double dot(Vec3 other) {
+        return dot_product(other);
+    }
+
+
+
+    double square_magnitude() {
+        return x * x + y * y + z * z;
+    }
+
+    double magnitude() {
+        return std::sqrt(square_magnitude());
+    }
+
+
+
+    const Vec3 operator+(const Vec3& other) const {
+        return Vec3(x + other.x, y + other.y, z + other.z);
+    }
+    const Vec3 operator-(const Vec3& other) const {
+        return Vec3(x - other.x, y - other.y, z - other.z);
+    }
 };
 
-Vec3 cross_product(Vec3 a, Vec3 b) {
-    return Vec3(a.y * b.z - a.z * b.y,
-        a.z * b.x - a.x * b.z,
-        a.x * b.y - a.y * b.x);
-}
-
-double dot_product(Vec3 a, Vec3 b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
 
 double triple_product(Vec3 a, Vec3 b, Vec3 c) {
-    return dot_product(a, cross_product(b, c));
+    return a.dot_product(b.cross_product(c));
+}
+const Vec3 operator*(double scalar, const Vec3& vec) {
+    return Vec3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
+}
+const Vec3 operator*(const Vec3& vec, double scalar) {
+    return scalar * vec;
+}
+const Vec3 operator/(const Vec3& vec, double scalar) {
+    return Vec3(vec.x / scalar, vec.y / scalar, vec.z / scalar);
 }
 
-double square_magnitude(Vec3 a) {
-    return a.x * a.x + a.y * a.y + a.z * a.z;
-}
-
-double magnitude(Vec3 a) {
-    return std::sqrt(square_magnitude(a));
-}
 
 
 
 struct UnitCellVectors {
 public:
+    //real space vectors
     Vec3 a;
     Vec3 b;
     Vec3 c;
+
+    //reciprocal space vectors
     Vec3 as;
     Vec3 bs;
     Vec3 cs;
@@ -284,21 +318,16 @@ public:
 
         double inv_vol = 1 / triple_product(a, b, c);
 
-        Vec3 cas = cross_product(b, c);
-        Vec3 cbs = cross_product(c, a);
-        Vec3 ccs = cross_product(a, b);
+        Vec3 cas = b.cross_product(c);
+        Vec3 cbs = c.cross_product(a);
+        Vec3 ccs = a.cross_product(b);
 
         as = Vec3(cas.x * inv_vol, cas.y * inv_vol, cas.z * inv_vol);
         bs = Vec3(cbs.x * inv_vol, cbs.y * inv_vol, cbs.z * inv_vol);
         cs = Vec3(ccs.x * inv_vol, ccs.y * inv_vol, ccs.z * inv_vol);
     }
-
-    UnitCellVectors(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav)
-        : UnitCellVectors(str_to_v(std::move(av)), str_to_v(std::move(bv)), str_to_v(std::move(cv)), str_to_v(std::move(alv)), str_to_v(std::move(bev)), str_to_v(std::move(gav))) {}
-
-    UnitCellVectors(const char* av, const char* bv, const char* cv, const char* alv, const char* bev, const char* gav)
-        : UnitCellVectors(str_to_v(av), str_to_v(bv), str_to_v(cv), str_to_v(alv), str_to_v(bev), str_to_v(gav)) {}
 };
+
 
 
 enum class CrystalSystem
@@ -312,7 +341,7 @@ public:
     UnitCell(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav)
         : a_s{ strip_brackets(std::move(av)) }, b_s{ strip_brackets(std::move(bv)) }, c_s{ strip_brackets(std::move(cv)) },
         al_s{ strip_brackets(std::move(alv)) }, be_s{ strip_brackets(std::move(bev)) }, ga_s{ strip_brackets(std::move(gav)) },
-        a{ str_to_v(a_s) }, b{ str_to_v(b_s) }, c{ str_to_v(c_s) }, al{ str_to_v(al_s) }, be{ str_to_v(be_s) }, ga{ str_to_v(ga_s) },
+        a{ stode(a_s).first }, b{ str_to_v(b_s) }, c{ str_to_v(c_s) }, al{ str_to_v(al_s) }, be{ str_to_v(be_s) }, ga{ str_to_v(ga_s) },
         crystal_system{ deduce_crystal_system() }, usv{ UnitCellVectors(a,b,c,al,be,ga) }, m_ss{ create_string() } {}
 
     UnitCell(const row::cif::Block& block)
@@ -374,7 +403,7 @@ private:
     }
 
     CrystalSystem deduce_crystal_system() {
-        if (are_equal(al, 90.0) && are_equal(be, 90.0) && are_equal(ga, 90.0)) {
+        if (util::are_equal(al, 90.0) && are_equal(be, 90.0) && are_equal(ga, 90.0)) {
             if (are_equal(a, b) && are_equal(b, c))
                 return CrystalSystem::Cubic;
             else if (are_equal(a, b) && !are_equal(b, c))
