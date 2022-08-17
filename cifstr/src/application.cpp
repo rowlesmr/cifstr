@@ -7,7 +7,7 @@
 #include <string>
 #include <filesystem>
 
-
+#ifdef DOTHIS
 import cif;
 import cifstr;
 import util;
@@ -48,3 +48,11 @@ int main(int argc, char* argv[])
 
 
 }
+#endif
+
+
+int main(int argc, char* argv[]) {
+
+    return 0;
+}
+
