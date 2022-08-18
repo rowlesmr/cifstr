@@ -462,6 +462,7 @@ export namespace row::cif {
 		dict<int, std::vector<dataname>> m_loops{}; // keeps track of datanames that are looped together
 		std::vector<itemorder> m_item_order{}; // keeps the insertion order
 		dict<dataname, dataname> m_true_case{}; // keeps the actual case of the tags used.
+		dataname name{}; //the name of the block to which this data belongs -> must be set through the Cif which this Block belongs.
 
 	public:
 		bool overwrite{ true };
@@ -517,6 +518,9 @@ export namespace row::cif {
 	public:
 		Block() = default;
 		explicit Block(bool ow) : overwrite(ow) {}
+		explicit Block(dataname name) : name{ name } {}
+		Block(dataname name, bool ow) : name{ name }, overwrite{ ow } {}
+
 
 
 		const_iterator addItem(dataname tag, Datavalue value) noexcept(false) {
@@ -812,6 +816,13 @@ export namespace row::cif {
 				return m_block.at(lowerTag);
 			}
 			throw no_such_tag_error(std::format("{} does not exist.", lowerTag));
+		}
+		const Datavalue& get_value(const dataname& tag) const {
+			return get(tag);
+		}
+
+		const dataname& getName() const {
+			return name;
 		}
 
 		std::vector<dataname> getNames() const {
@@ -1169,7 +1180,7 @@ export namespace row::cif {
 		}
 		size_t erase(const dataname& tag) {
 			const_iterator r = removeItem(tag);
-			if (r == this->cend())
+			if (r == cend())
 				return 0;
 			else
 				return 1;

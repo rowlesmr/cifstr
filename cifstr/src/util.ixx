@@ -3,12 +3,11 @@
 #include <vector>
 #include <algorithm>
 #include <numbers>
+#include <format>
 
 export module util;
 
-
 export namespace row::util {
-
 
 	void toLower_i(std::string& str) {
 		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -17,7 +16,6 @@ export namespace row::util {
 		toLower_i(str);
 		return str;
 	}
-
 
 	void toLower_i(std::vector<std::string>& strs) {
 		for (std::string& str : strs) {
@@ -29,16 +27,11 @@ export namespace row::util {
 		return strs;
 	}
 
-
 	template<typename C, typename F>
 	bool contains(const C& c, const F& f) {
 		return std::find(c.cbegin(), c.cend(), f) != c.cend();
 	}
 
-	template<typename item, typename collection>
-	bool is_in(const item& i, const collection& c) {
-		return std::any_of(c.begin(), c.end(), [&i](const item& val) { return val == i; });
-	}
 
 	template <typename T>
 	void makeInRange(T& val, const T& minVal, const T& maxVal) {
@@ -50,7 +43,6 @@ export namespace row::util {
 		}
 	}
 
-
 	//https://stackoverflow.com/a/57399634/36061
 	template <typename T> void move_element(std::vector<T>& v, size_t oldIndex, size_t newIndex)
 	{
@@ -61,7 +53,6 @@ export namespace row::util {
 			std::rotate(v.begin() + oldIndex, v.begin() + oldIndex + 1, v.begin() + newIndex + 1);
 	}
 
-
 	template<typename T>
 	int getIndexOf(const std::vector<T>& v, const T& f) {
 		auto it = std::find(v.cbegin(), v.cend(), f);
@@ -70,7 +61,6 @@ export namespace row::util {
 		}
 		return static_cast<int>(it - v.cbegin());
 	}
-
 
 
 	constexpr double NaN{ std::numeric_limits<double>::quiet_NaN() };
@@ -172,25 +162,20 @@ export namespace row::util {
 		return stode(s.c_str(), s.size());
 	}
 
-
-
 	std::string& strip_brackets_i(std::string& s) {
 		size_t n{ s.find("(") };
 		if (n != std::string::npos)
 			s = s.substr(0, n);
 		return s;
 	}
-
 	std::string strip_brackets(std::string s) {
 		strip_brackets_i(s);
 		return s;
 	}
-
 	std::vector<std::string>& strip_brackets_i(std::vector<std::string>& v) {
 		std::for_each(v.begin(), v.end(), [](std::string& s) { strip_brackets_i(s); });
 		return v;
 	}
-
 	std::vector<std::string> strip_brackets(std::vector<std::string> v) {
 		strip_brackets_i(v);
 		return v;
@@ -201,5 +186,58 @@ export namespace row::util {
 		return std::fabs(q - w) < 0.00000001;
 	}
 
+	bool all_equal(std::initializer_list<double> list) {
+		auto it = list.begin();
+		return std::all_of(++it, list.end(), [&list](double val) { return are_equal(*list.begin(), val); });
+	}
 
+
+
+	void pad_right_i(std::string& s, size_t len)
+	{
+		s = std::format("{0:{1}}", s, len);
+		return;
+	}
+
+	void pad_left_i(std::string& s, size_t len)
+	{
+		s = std::format("{0:>{1}}", s, len);
+		return;
+	}
+
+	std::vector<std::string>& pad_column_i(std::vector<std::string>& v) {
+		if (std::any_of(v.begin(), v.end(), [](const std::string& s) { return s[0] == '-'; })) {
+			std::for_each(v.begin(), v.end(), [](std::string& s) { if (s[0] != '-') pad_left_i(s, s.size() + 1); });
+		}
+		size_t max_len{ 0 };
+		std::for_each(v.begin(), v.end(), [&max_len](const std::string& s) { if (s.size() > max_len) max_len = s.size(); });
+		std::for_each(v.begin(), v.end(), [&max_len](std::string& s) { pad_right_i(s, max_len); });
+		return v;
+	}
+
+	std::vector<std::string> pad_column(std::vector<std::string> v) {
+		pad_column_i(v);
+		return v;
+	}
+
+	std::string& trim_i(std::string& s) {
+		s.erase(s.find_last_not_of(' ') + 1);
+		s.erase(0, s.find_first_not_of(' '));
+		return s;
+	}
+
+	std::string trim(std::string s) {
+		trim_i(s);
+		return s;
+	}
+
+	std::string& replace_i(std::string& s, const char match, const char replace) {
+		std::replace(s.begin(), s.end(), match, replace);
+		return s;
+	}
+
+	std::string replace(std::string s, const char match, const char replace) {
+		replace_i(s, match, replace);
+		return s;
+	}
 }

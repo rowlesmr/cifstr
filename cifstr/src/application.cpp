@@ -7,10 +7,10 @@
 #include <string>
 #include <filesystem>
 
-#ifdef DOTHIS
-import cif;
+
+import pdqciflib;
 import cifstr;
-import util;
+
 
 
 int main(int argc, char* argv[])
@@ -26,33 +26,35 @@ int main(int argc, char* argv[])
     for (int i{ 1 }; i < argc-1; ++i) { 
         std::string file{ argv[i] };
         try {
-            row::println(std::format("--------------------\nNow reading {0}. Block(s):", file));
+            std::cout << std::format("--------------------\nNow reading {0}. Block(s):\n", file);
             row::cif::Cif cif = row::cif::read_file(file);
-            for (const row::cif::Block& block : cif.blocks) {
+            for (const auto& [name, block] : cif) {
                 try {
-                    row::println(block.name);
-                    CrystalStructure str(block, cif.source);
+                    std::cout << name << '\n';
+                    CrystalStructure str(block, name, cif.getSource());
                     fout << str.to_string() << '\n';
                 }
                 catch (std::exception& e) {
-                    row::println(e.what());
-                    row::println("Continuing...");
+                    std::cout << e.what() << '\n';
+                    std::cout << "Continuing with next block...\n";
                 }
             }
         }
         catch (std::runtime_error& e) {
-            row::println(e.what());
-            row::println("Probable parse error. Continuing...");
+            std::cout << e.what() << '\n';
+            std::cout << "Probable parse error. Continuing with next file...\n";
         }   
     }
 
 
+    //row::cif::Block blk{};
+
+    //for (const auto& [name, value] : blk) {
+
+    //}
+
+
+
 }
-#endif
 
-
-int main(int argc, char* argv[]) {
-
-    return 0;
-}
 

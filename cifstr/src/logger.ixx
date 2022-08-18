@@ -20,7 +20,7 @@ namespace row {
         Logger(Level lev)
             :level{ lev }
         {
-            if (level >= CRITICAL) {
+            if (level == DEBUG) {
                 std::cout << "[" << level_names[level] << "]: " << "LOGGER set to: " << level_names[level] << '\n';
             }
         }
@@ -29,17 +29,22 @@ namespace row {
 
         ~Logger()
         {
-            if (level >= CRITICAL) {
+            if (level == DEBUG) {
                 std::cout << "[" << level_names[level] << "]: " << " LOGGER destroyed" << std::endl;
             }
         }
 
-        void log(Level lev, std::string message)
-        {
+        void log(Level lev, std::string message) const {
             if (lev >= level) {
                 std::cout << "[" << level_names[lev] << "]: " << message << '\n';
             }
         }
+
+        void setLevel(Level lev) {
+            level = lev;
+        }
+
+
     };
 
 

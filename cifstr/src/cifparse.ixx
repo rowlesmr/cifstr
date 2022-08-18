@@ -157,8 +157,8 @@ namespace row::cif {
             }
         }
 
-        void appendTag(std::string tag) {
-            tags.push_back(std::move(tag));
+        void appendTag(std::string in_tag) {
+            tags.push_back(std::move(in_tag));
             ++tagNum;
         }
         void appendValue(std::string val) {

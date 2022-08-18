@@ -1,6 +1,4 @@
 
-//
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,14 +17,10 @@
 import logger;
 import pdqciflib;
 
-
-
-
 export module cifstr;
 
-
 using namespace row;
-
+using namespace row::util;
 
 #ifdef _DEBUG
 static Logger logger{ Logger::Level::DEBUG };
@@ -53,10 +47,10 @@ static constexpr const std::array<std::string_view, 100> elements
 static constexpr const std::array<std::string_view, 3> water{ "Wat", "WAT", "wat" };
 
 static constexpr const std::array<std::string_view, 212> allowed_atoms
-{ "D",    "H",    "H-1",  "D-1",  "He",   "Li",   "Li+1", "Be",  "Be+2",  "B",
-  "C",    "N",    "O",    "O-1",  "O-2",  "F",    "F-1",  "Ne",  "Na",   "Na+1",
-  "Mg",   "Mg+2", "Al",   "Al+3", "Si",   "Si+4", "P",    "S",   "Cl",   "Cl-1",
-  "Ar",   "K",    "K+1",  "Ca",   "Ca+2", "Sc",   "Sc+3", "Ti",  "Ti+2",  "Ti+3",
+{ "D",    "H",    "H-1",  "D-1",  "He",   "Li",   "Li+1", "Be",   "Be+2", "B",
+  "C",    "N",    "O",    "O-1",  "O-2",  "F",    "F-1",  "Ne",   "Na",   "Na+1",
+  "Mg",   "Mg+2", "Al",   "Al+3", "Si",   "Si+4", "P",    "S",    "Cl",   "Cl-1",
+  "Ar",   "K",    "K+1",  "Ca",   "Ca+2", "Sc",   "Sc+3", "Ti",   "Ti+2", "Ti+3",
   "Ti+4", "V",    "V+2",  "V+3",  "V+5",  "Cr",   "Cr+2", "Cr+3", "Mn",   "Mn+2",
   "Mn+3", "Mn+4", "Fe",   "Fe+2", "Fe+3", "Co",   "Co+2", "Co+3", "Ni",   "Ni+2",
   "Ni+3", "Cu",   "Cu+1", "Cu+2", "Zn",   "Zn+2", "Ga",   "Ga+3", "Ge",   "Ge+4",
@@ -76,49 +70,6 @@ static constexpr const std::array<std::string_view, 212> allowed_atoms
   "Np",   "Np+3", "Np+4", "Np+6", "Pu",   "Pu+3", "Pu+4", "Pu+6", "Am",   "Cm",
   "Bk",   "Cf" };
 
-static const std::string one_sixth{ "=1/6;" };
-static const std::string one_third{ "=1/3;" };
-static const std::string two_third{ "=2/3;" };
-static const std::string five_sixth{ "=5/6;" };
-static const std::string neg_one_sixth{ "=-1/6;" };
-static const std::string neg_one_third{ "=-1/3;" };
-static const std::string neg_two_third{ "=-2/3;" };
-static const std::string neg_five_sixth{ "=-5/6;" };
-
-static const std::unordered_map<std::string, std::string> fractions
-({
-   {"0.1666", one_sixth}, {"0.16666", one_sixth}, {"0.166666", one_sixth}, {"0.1666666", one_sixth},
-   {"0.1667", one_sixth}, {"0.16667", one_sixth}, {"0.166667", one_sixth}, {"0.1666667", one_sixth},
-   {".1666",  one_sixth}, {".16666",  one_sixth}, {".166666",  one_sixth}, {".1666666",  one_sixth},
-   {".1667",  one_sixth}, {".16667",  one_sixth}, {".166667",  one_sixth}, {".1666667",  one_sixth},
-
-   {"-0.1666", neg_one_sixth}, {"-0.16666", neg_one_sixth}, {"-0.166666", neg_one_sixth}, {"-0.1666666", neg_one_sixth},
-   {"-0.1667", neg_one_sixth}, {"-0.16667", neg_one_sixth}, {"-0.166667", neg_one_sixth}, {"-0.1666667", neg_one_sixth},
-   {"-.1666",  neg_one_sixth}, {"-.16666",  neg_one_sixth}, {"-.166666",  neg_one_sixth}, {"-.1666666",  neg_one_sixth},
-   {"-.1667",  neg_one_sixth}, {"-.16667",  neg_one_sixth}, {"-.166667",  neg_one_sixth}, {"-.1666667",  neg_one_sixth},
-
-   {"0.3333",  one_third}, {"0.33333",  one_third}, {"0.333333",  one_third}, {"0.3333333",  one_third},
-   {".3333",   one_third}, {".33333",   one_third}, {".333333",   one_third}, {".3333333",   one_third},
-
-   {"-0.3333", neg_one_third}, {"-0.33333", neg_one_third}, {"-0.333333", neg_one_third}, {"-0.3333333", neg_one_third},
-   {"-.3333",  neg_one_third}, {"-.33333",  neg_one_third}, {"-.333333",  neg_one_third}, {"-.3333333",  neg_one_third},
-
-   {"0.6666", two_third}, {"0.66666", two_third}, {"0.666666", two_third}, {"0.6666666", two_third},
-   {"0.6667", two_third}, {"0.66667", two_third}, {"0.666667", two_third}, {"0.6666667", two_third},
-   {".6666",  two_third}, {".66666",  two_third}, {".666666",  two_third}, {".6666666",  two_third},
-   {".6667",  two_third}, {".66667",  two_third}, {".666667",  two_third}, {".6666667",  two_third},
-
-   {"-0.6666", neg_two_third}, {"-0.66666", neg_two_third}, {"-0.666666", neg_two_third}, {"-0.6666666", neg_two_third},
-   {"-0.6667", neg_two_third}, {"-0.66667", neg_two_third}, {"-0.666667", neg_two_third}, {"-0.6666667", neg_two_third},
-   {"-.6666",  neg_two_third}, {"-.66666",  neg_two_third}, {"-.666666",  neg_two_third}, {"-.6666666",  neg_two_third},
-   {"-.6667",  neg_two_third}, {"-.66667",  neg_two_third}, {"-.666667",  neg_two_third}, {"-.6666667",  neg_two_third},
-
-   {"0.8333",  five_sixth}, {"0.83333",  five_sixth}, {"0.833333",  five_sixth}, {"0.8333333",  five_sixth},
-   {".8333",   five_sixth}, {".83333",   five_sixth}, {".833333",   five_sixth}, {".8333333",   five_sixth},
-
-   {"-0.8333", neg_five_sixth}, {"-0.83333", neg_five_sixth}, {"-0.833333", neg_five_sixth}, {"-0.8333333",neg_five_sixth},
-   {"-.8333",  neg_five_sixth}, {"-.83333",  neg_five_sixth}, {"-.833333",  neg_five_sixth}, {"-.8333333", neg_five_sixth}
-    });
 
 
 std::string& fix_atom_type_i(std::string& atom) {
@@ -143,7 +94,7 @@ std::string& fix_atom_type_i(std::string& atom) {
 
     std::string new_atom = symbol + sign + charge;
 
-    if (is_in(new_atom, allowed_atoms)) {
+    if (contains(allowed_atoms, new_atom)) {
         atom = new_atom;
         return atom;
     }
@@ -165,16 +116,16 @@ std::vector<std::string> fix_atom_types(std::vector<std::string> atoms) {
 }
 
 std::string& label_to_atom_i(std::string& label) {
-    if (is_in(label.substr(0, 3), water)) {
+    if (contains(water, label.substr(0, 3))) {
         logger.log(Logger::Level::WARNING, std::format("Site label '{0}' probably means 'water'. Please check that this atom really is oxygen.", label));
         label = "O";
         return label;
     }
-    else if (is_in(label.substr(0, 2), elements)) {
+    else if (contains(elements, label.substr(0, 2))) {
         label = label.substr(0, 2);
         return label;
     }
-    else if (is_in(label.substr(0, 1), elements)) {
+    else if (contains(elements, label.substr(0, 1))) {
         std::string tmp = label.substr(0, 1);
         if (tmp == "W")
             logger.log(Logger::Level::WARNING, std::format("W detected for site '{0}'. Do you mean oxygen from a water molecule or tungsten? Please check.", label));
@@ -196,20 +147,32 @@ std::vector<std::string> labels_to_atoms(std::vector<std::string> labels) {
     return labels;
 }
 
-std::string& make_frac_i(std::string& s) {
-    auto result = fractions.find(s);
-    if (result != fractions.end()) {
-        logger.log(Logger::Level::INFO, std::format("Atomic site coordinate '{0}' replaced by '{1}'.", s, result->second));
-        s = result->second;
+std::string& make_frac_i(std::string& coord, const std::string_view label="") {
+    
+    std::string r{};
+    if (auto m1 = ctre::match<"^([+\\-]?)0?\\.16{2,}[67]$">(coord)) {
+        r = std::format("={0}1/6;", m1.get<1>().to_string());
     }
-    return s;
-}
-std::string& make_frac_i(std::string& coord, const std::string& label) {
-    auto result = fractions.find(coord);
-    if (result != fractions.end()) {
-        logger.log(Logger::Level::INFO, std::format("Atomic fractional coordinate '{0}' replaced by '{1}' for site {2}.", coord, result->second, label));
-        coord = result->second;
+    else if (auto m2 = ctre::match<"^([+\\-]?)0?\\.3{4,}$">(coord)) {
+        r = std::format("={0}1/3;", m2.get<1>().to_string());
     }
+    else if (auto m3 = ctre::match<"^([+\\-]?)0?\\.6{3,}[67]$">(coord)) {
+        r = std::format("={0}2/3;", m3.get<1>().to_string());
+    }
+    else if (auto m4 = ctre::match<"^([+\\-]?)0?\\.83{3,}$">(coord)) {
+        r = std::format("={0}5/6;", m4.get<1>().to_string());
+    }
+
+    if (r.size() != 0) {
+        if (label.size() == 0) {
+            logger.log(Logger::Level::INFO, std::format("Atomic site coordinate '{0}' replaced by '{1}'.", coord, r)); 
+        }
+        else {
+            logger.log(Logger::Level::INFO, std::format("Atomic fractional coordinate '{0}' replaced by '{1}' for site {2}.", coord, r, label));
+        }
+        coord = r;
+    }
+
     return coord;
 }
 
@@ -244,28 +207,26 @@ public:
         : x{ u }, y{ v }, z{ w }{}
 
 
-    Vec3 cross_product(Vec3 other) {
+    Vec3 cross_product(const Vec3& other) const {
         return Vec3(y * other.z - z * other.y,
                     z * other.x - x * other.z,
                     x * other.y - y * other.x);
     }
-    Vec3 cross(Vec3 other) {
+    Vec3 cross(const Vec3& other) const {
         return cross_product(other);
     }
-    double dot_product(Vec3 other) {
+    double dot_product(const Vec3& other) const {
         return x * other.x + y * other.y + z * other.z;
     }
-    double dot(Vec3 other) {
+    double dot(const Vec3& other) const {
         return dot_product(other);
     }
 
-
-
-    double square_magnitude() {
+    double square_magnitude() const {
         return x * x + y * y + z * z;
     }
 
-    double magnitude() {
+    double magnitude() const {
         return std::sqrt(square_magnitude());
     }
 
@@ -278,8 +239,6 @@ public:
         return Vec3(x - other.x, y - other.y, z - other.z);
     }
 };
-
-
 double triple_product(Vec3 a, Vec3 b, Vec3 c) {
     return a.dot_product(b.cross_product(c));
 }
@@ -292,8 +251,6 @@ const Vec3 operator*(const Vec3& vec, double scalar) {
 const Vec3 operator/(const Vec3& vec, double scalar) {
     return Vec3(vec.x / scalar, vec.y / scalar, vec.z / scalar);
 }
-
-
 
 
 struct UnitCellVectors {
@@ -312,22 +269,21 @@ public:
 
     UnitCellVectors(double av, double bv, double cv, double alv, double bev, double gav) {
         a = Vec3(av);
-        b = Vec3(bv * std::cos(gav * rad), bv * std::sin(gav * rad));
-        double n = (std::cos(alv * rad) - (std::cos(gav * rad) * std::cos(bev * rad))) / std::sin(gav * rad);
-        c = Vec3(cv * std::cos(bev * rad), cv * n, std::sqrt(std::sin(alv * rad) * std::sin(alv * rad) - n * n));
+        b = Vec3(bv * std::cos(gav * deg), bv * std::sin(gav * deg));
+        double n = (std::cos(alv * deg) - (std::cos(gav * deg) * std::cos(bev * deg))) / std::sin(gav * deg);
+        c = Vec3(cv * std::cos(bev * deg), cv * n, std::sqrt(std::sin(alv * deg) * std::sin(alv * deg) - n * n));
 
-        double inv_vol = 1 / triple_product(a, b, c);
+        double inv_vol{ 1 / triple_product(a, b, c) };
 
         Vec3 cas = b.cross_product(c);
         Vec3 cbs = c.cross_product(a);
         Vec3 ccs = a.cross_product(b);
 
-        as = Vec3(cas.x * inv_vol, cas.y * inv_vol, cas.z * inv_vol);
-        bs = Vec3(cbs.x * inv_vol, cbs.y * inv_vol, cbs.z * inv_vol);
-        cs = Vec3(ccs.x * inv_vol, ccs.y * inv_vol, ccs.z * inv_vol);
+        as = Vec3(cas.x, cas.y, cas.z) * inv_vol;
+        bs = Vec3(cbs.x, cbs.y, cbs.z) * inv_vol;
+        cs = Vec3(ccs.x, ccs.y, ccs.z) * inv_vol;
     }
 };
-
 
 
 enum class CrystalSystem
@@ -341,19 +297,60 @@ public:
     UnitCell(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav)
         : a_s{ strip_brackets(std::move(av)) }, b_s{ strip_brackets(std::move(bv)) }, c_s{ strip_brackets(std::move(cv)) },
         al_s{ strip_brackets(std::move(alv)) }, be_s{ strip_brackets(std::move(bev)) }, ga_s{ strip_brackets(std::move(gav)) },
-        a{ stode(a_s).first }, b{ str_to_v(b_s) }, c{ str_to_v(c_s) }, al{ str_to_v(al_s) }, be{ str_to_v(be_s) }, ga{ str_to_v(ga_s) },
-        crystal_system{ deduce_crystal_system() }, usv{ UnitCellVectors(a,b,c,al,be,ga) }, m_ss{ create_string() } {}
+        a{ stode(a_s).first }, b{ stode(b_s).first }, c{ stode(c_s).first }, al{ stode(al_s).first }, be{ stode(be_s).first }, ga{ stode(ga_s).first },
+        crystal_system{ deduce_symmetry() }, usv{ UnitCellVectors(a,b,c,al,be,ga) } {}
 
-    UnitCell(const row::cif::Block& block)
-        : UnitCell(block.get_value("_cell_length_a")[0], block.get_value("_cell_length_b")[0], block.get_value("_cell_length_c")[0],
-        block.get_value("_cell_angle_alpha")[0], block.get_value("_cell_angle_beta")[0], block.get_value("_cell_angle_gamma")[0]) {}
+    UnitCell(const row::cif::Block& block) {
+    
+        a_s = block.get_value("_cell_length_a").getStrings()[0];
+        b_s = block.get_value("_cell_length_b").getStrings()[0];
+        c_s = block.get_value("_cell_length_c").getStrings()[0];
+        al_s = block.get_value("_cell_angle_alpha").getStrings()[0];
+        be_s = block.get_value("_cell_angle_beta").getStrings()[0];
+        ga_s = block.get_value("_cell_angle_gamma").getStrings()[0];
+    
+        a = block.get_value("_cell_length_a").getDoubles()[0];
+        b = block.get_value("_cell_length_b").getDoubles()[0];
+        c = block.get_value("_cell_length_c").getDoubles()[0];
+        al = block.get_value("_cell_angle_alpha").getDoubles()[0];
+        be = block.get_value("_cell_angle_beta").getDoubles()[0];
+        ga = block.get_value("_cell_angle_gamma").getDoubles()[0];
 
-    const std::string& to_string() const {
-        return m_ss;
+        crystal_system = deduce_symmetry();
+        usv = UnitCellVectors(a,b,c,al,be,ga);
+    
     }
 
     const UnitCellVectors& get_unitcellvectors() const {
         return usv;
+    }
+
+    std::string to_string(size_t indent = 2) const {
+        std::string tabs(indent, '\t');
+
+        switch (crystal_system)
+        {
+        case CrystalSystem::Triclinic:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}\n{0}al {4}\t' {4}\n{0}be {5}\t' {5}\n{0}ga {6}\t' {6}", tabs, a_s, b_s, c_s, al_s, be_s, ga_s);
+        case CrystalSystem::Monoclinic_al:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}\n{0}al {4}\t' {4}", tabs, a_s, b_s, c_s, al_s);
+        case CrystalSystem::Monoclinic_be:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}\n{0}be {4}\t' {4}", tabs, a_s, b_s, c_s, be_s);
+        case CrystalSystem::Monoclinic_ga:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}\n{0}ga {4}\t' {4}", tabs, a_s, b_s, c_s, ga_s);
+        case CrystalSystem::Orthorhombic:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}", tabs, a_s, b_s, c_s);
+        case CrystalSystem::Tetragonal:
+            return std::format("{0}Tetragonal({1}, {2}) ' {1}, {2}", tabs, a_s, c_s);
+        case CrystalSystem::Hexagonal:
+            return std::format("{0}Hexagonal({1}, {2}) ' {1}, {2}", tabs, a_s, c_s);
+        case CrystalSystem::Rhombohedral:
+            return std::format("{0}Rhombohedral({1}, {2}) ' {1}, {2}", tabs, a_s, al_s);
+        case CrystalSystem::Cubic:
+            return std::format("{0}Cubic({1}) ' {1}", tabs, a_s);
+        default:
+            return std::format("{0}a  {1}\t' {1}\n{0}b  {2}\t' {2}\n{0}c  {3}\t' {3}\n{0}al {4}\t' {4}\n{0}be {5}\t' {5}\n{0}ga {6}\t' {6}", tabs, a_s, b_s, c_s, al_s, be_s, ga_s);
+        }
     }
 
 private:
@@ -374,69 +371,40 @@ private:
     CrystalSystem crystal_system;
     UnitCellVectors usv;
 
-    std::string m_ss{};
-
-    std::string create_string() {
-        switch (crystal_system)
-        {
-            case CrystalSystem::Triclinic:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}\n\t\tal {3}\t' {3}\n\t\tbe {4}\t' {4}\n\t\tga {5}\t' {5}", a_s, b_s, c_s, al_s, be_s, ga_s);
-            case CrystalSystem::Monoclinic_al:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}\n\t\tal {3}\t' {3}", a_s, b_s, c_s, al_s);
-            case CrystalSystem::Monoclinic_be:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}\n\t\tbe {3}\t' {3}", a_s, b_s, c_s, be_s);
-            case CrystalSystem::Monoclinic_ga:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}\n\t\tga {3}\t' {3}", a_s, b_s, c_s, ga_s);
-            case CrystalSystem::Orthorhombic:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}", a_s, b_s, c_s);
-            case CrystalSystem::Tetragonal:
-                return std::format("\t\tTetragonal({0}, {1}) ' {0}, {1}", a_s, c_s);
-            case CrystalSystem::Hexagonal:
-                return std::format("\t\tHexagonal({0}, {1}) ' {0}, {1}", a_s, c_s);
-            case CrystalSystem::Rhombohedral:
-                return std::format("\t\tRhombohedral({0}, {1}) ' {0}, {1}", a_s, al_s);
-            case CrystalSystem::Cubic:
-                return std::format("\t\tCubic({0}) ' {0}", a_s);
-            default:
-                return std::format("\t\ta  {0}\t' {0}\n\t\tb  {1}\t' {1}\n\t\tc  {2}\t' {2}\n\t\tal {3}\t' {3}\n\t\tbe {4}\t' {4}\n\t\tga {5}\t' {5}", a_s, b_s, c_s, al_s, be_s, ga_s);
-        }
-    }
-
-    CrystalSystem deduce_crystal_system() {
-        if (util::are_equal(al, 90.0) && are_equal(be, 90.0) && are_equal(ga, 90.0)) {
-            if (are_equal(a, b) && are_equal(b, c))
+    CrystalSystem deduce_symmetry() const {
+        if (util::all_equal({ a,b,c }) && util::all_equal({ al,be,ga })) {
+            if (util::are_equal(al, 90.0)) {
                 return CrystalSystem::Cubic;
-            else if (are_equal(a, b) && !are_equal(b, c))
-                return CrystalSystem::Tetragonal;
-            else if (!are_equal(a, b) && !are_equal(b, c))
-                return CrystalSystem::Orthorhombic;
-            else
-                return CrystalSystem::Triclinic;
-        }
-        else if (are_equal(al, 90.0) && are_equal(be, 90.0) && are_equal(ga, 120.0)) {
-            if (are_equal(a, b) && !are_equal(b, c))
-                return CrystalSystem::Hexagonal; //can't tell hexagonal vs trigonal from unit cell prms, and the TOPAS macro is the same anyway, soooo...
-            else
-                return CrystalSystem::Triclinic;
-        }
-        else if (are_equal(al, be) && are_equal(be, ga) && !are_equal(al, 90.0)) {
-            if (are_equal(a, b) && are_equal(b, c))
+            }
+            else {
                 return CrystalSystem::Rhombohedral;
-            else
-                return CrystalSystem::Triclinic;
+            }
         }
-        else if (!are_equal(a, b) && !are_equal(b, c)) {
-            if (are_equal(al, be) && !are_equal(be, ga) && are_equal(al, 90.0))
-                return CrystalSystem::Monoclinic_ga;
-            else if (are_equal(al, ga) && !are_equal(ga, be) && are_equal(al, 90.0))
-                return CrystalSystem::Monoclinic_be;
-            else if (are_equal(be, ga) && !are_equal(ga, al) && are_equal(be, 90.0))
-                return CrystalSystem::Monoclinic_al;
-            else
-                return CrystalSystem::Triclinic;
+        else if (util::all_equal({ a,b }) && util::all_equal({ al,be,90.0 })) {
+            if (util::are_equal(ga, 90.0)) {
+                return CrystalSystem::Tetragonal;
+            }
+            if (util::are_equal(ga, 120.0)) {
+                return CrystalSystem::Hexagonal; //can't tell hexagonal vs trigonal from unit cell prms, and the TOPAS macro is the same anyway, soooo...
+            }
         }
-        return CrystalSystem::Triclinic;
+        else if (!util::all_equal({ a,b,c }) && util::all_equal({ al,be,ga,90.0 })) {
+            return CrystalSystem::Orthorhombic;
+        }
+
+        if (util::all_equal({ al,ga,90.0 }) && !util::all_equal({ be,90.0 })) {
+            return CrystalSystem::Monoclinic_be;
+        }
+        else if (util::all_equal({ al,be,90.0 }) && !util::all_equal({ ga,90.0 })) {
+            return CrystalSystem::Monoclinic_ga;
+        }
+        else if (util::all_equal({ ga,be,90.0 }) && !util::all_equal({ al,90.0 })) {
+            return CrystalSystem::Monoclinic_al;
+        }
+            return CrystalSystem::Triclinic;
     }
+
+
 };
 
 
@@ -449,31 +417,33 @@ public:
     std::string atom{};
     std::string occ{};
     std::string beq{};
-    std::string string{};
 
     Site(std::string label, std::string x, std::string y, std::string z, std::string atom, std::string occ, std::string beq)
         : label{ std::move(label) }, x{ std::move(x) }, y{ std::move(y) }, z{ std::move(z) }, 
-        atom{ std::move(atom) }, occ{ std::move(occ) }, beq{ std::move(beq) }, string{ create_string() } {}
-
-    const std::string& to_string() const {
-        return string;
+        atom{ std::move(atom) }, occ{ std::move(occ) }, beq{ std::move(beq) } {
+    
+        std::replace(label.begin(), label.end(), '\'', 'p'); //can't contain a "'", as this is a comment character in TOPAS
     }
 
-private:
-    std::string create_string() const {
-        return std::format("\t\tsite {0} num_posns 0\tx {1} y {2} z {3} occ {4} {5} beq {6}", label, x, y, z, atom, occ, beq);
+    std::string to_string(size_t indent = 2) const {
+        std::string tabs(indent, '\t');
+        return std::format("\t\tsite {1} num_posns 0\tx {2} y {3} z {4} occ {5} {6} beq {7}", tabs, label, x, y, z, atom, occ, beq);
     }
 };
 
 
 class Sites {
+private:
+    std::vector<Site> m_sites{};
+    std::string m_ss{};
+
 public:
     Sites(const row::cif::Block& block) {
 
-        std::vector<std::string> labels{ block.get_value("_atom_site_label") };
-        std::vector<std::string> xs{ block.get_value("_atom_site_fract_x") };
-        std::vector<std::string> ys{ block.get_value("_atom_site_fract_y") };
-        std::vector<std::string> zs{ block.get_value("_atom_site_fract_z") };
+        std::vector<std::string> labels{ block.get_value("_atom_site_label").getStrings() };
+        std::vector<std::string> xs{ block.get_value("_atom_site_fract_x").getStrings() };
+        std::vector<std::string> ys{ block.get_value("_atom_site_fract_y").getStrings() };
+        std::vector<std::string> zs{ block.get_value("_atom_site_fract_z").getStrings() };
 
         
         pad_column_i(strip_brackets_i(make_frac_i(xs, labels)));
@@ -498,20 +468,16 @@ public:
         return m_ss;
     }
 
-private:
-    std::vector<Site> m_sites{};
-    std::string m_ss{};
-
 public:
     static std::optional<std::vector<std::string>> get_Biso(const row::cif::Block& block) {
-        if(!block.has_tag("_atom_site_B_iso_or_equiv"))
+        if(!block.contains("_atom_site_B_iso_or_equiv"))
             return std::nullopt;
 
-        std::vector<std::string> beq{ block.get_value("_atom_site_B_iso_or_equiv") };
+        std::vector<std::string> beq{ block.get_value("_atom_site_B_iso_or_equiv").getStrings() };
         strip_brackets_i(beq);
 
         size_t NAs{ 0 };
-        std::for_each(beq.begin(), beq.end(), [&NAs](const std::string& b) {if (is_in(b, NA_values)) ++NAs; });
+        std::for_each(beq.begin(), beq.end(), [&NAs](const std::string& b) {if (contains(NA_values, b)) ++NAs; });
 
         if (NAs > 0) {
             logger.log(Logger::Level::INFO, std::format("{0} missing Biso values.", NAs));
@@ -520,31 +486,32 @@ public:
     }
 
     static std::optional<std::vector<std::string>> get_Uiso_as_B(const row::cif::Block& block) {
-        if (!block.has_tag("_atom_site_U_iso_or_equiv"))
+        if (!block.contains("_atom_site_U_iso_or_equiv"))
             return std::nullopt;
 
-        std::vector<std::string> ueq{ block.get_value("_atom_site_U_iso_or_equiv") };
-        strip_brackets_i(ueq);
-
-        size_t NAs{ 0 };
-        std::for_each(ueq.begin(), ueq.end(), [&NAs](const std::string& u) { if (is_in(u, NA_values)) ++NAs;  });
+        size_t NAs{ 0 };       
+        const std::vector<std::string>& ueq{ block.get_value("_atom_site_U_iso_or_equiv").getStrings() };
+        std::for_each(ueq.begin(), ueq.end(), [&NAs](const std::string& u) { if (contains(NA_values, u)) ++NAs;  });
 
         if (NAs > 0) {
             logger.log(Logger::Level::INFO, std::format("{0} missing Uiso values.", NAs));
         }
 
-        std::transform(ueq.begin(), ueq.end(), ueq.begin(), [](std::string& u) { return std::format("{:.3f}", str_to_v(u) * as_B); });
+        const std::vector<double>& ueq_dbl{ block.get_value("_atom_site_U_iso_or_equiv").getDoubles() };
+        std::vector<std::string> r{};
+        r.resize(ueq_dbl.size());
+        std::transform(ueq_dbl.cbegin(), ueq_dbl.cend(), r.begin(), [](double d) { return std::format("{:.3f}", d * as_B); });
 
-        return ueq;
+        return r;
     }
 
     static std::optional<std::vector<std::string>> get_Baniso_as_B(const row::cif::Block& block) {
-        if (!block.has_tag("_atom_site_aniso_B_11"))
+        if (!block.contains("_atom_site_aniso_B_11"))
             return std::nullopt;
 
-        std::vector<double> B11{ str_to_v(block.get_value("_atom_site_aniso_B_11")) };
-        std::vector<double> B22{ str_to_v(block.get_value("_atom_site_aniso_B_22")) };
-        std::vector<double> B33{ str_to_v(block.get_value("_atom_site_aniso_B_33")) };
+        std::vector<double> B11{ block.get_value("_atom_site_aniso_B_11").getDoubles() };
+        std::vector<double> B22{ block.get_value("_atom_site_aniso_B_22").getDoubles() };
+        std::vector<double> B33{ block.get_value("_atom_site_aniso_B_33").getDoubles() };
         std::vector<double> beq;
         beq.reserve(B11.size());
 
@@ -552,44 +519,52 @@ public:
             beq.push_back((B11[i] + B22[i] + B33[i]) / 3.0);
         }
 
-        return v_to_str(beq);
+        std::vector<std::string> r{};
+        r.resize(beq.size());
+        std::transform(beq.cbegin(), beq.cend(), r.begin(), [](double d) { return std::format("{:.3f}", d); });
+
+        return r;
     }
 
     static std::optional<std::vector<std::string>> get_Uaniso_as_B(const row::cif::Block& block) {
-        if (!block.has_tag("_atom_site_aniso_U_11"))
+        if (!block.contains("_atom_site_aniso_U_11"))
             return std::nullopt;
 
-        std::vector<double> U11{ str_to_v(block.get_value("_atom_site_aniso_U_11")) };
-        std::vector<double> U22{ str_to_v(block.get_value("_atom_site_aniso_U_22")) };
-        std::vector<double> U33{ str_to_v(block.get_value("_atom_site_aniso_U_33")) };
+        std::vector<double> U11{ block.get_value("_atom_site_aniso_U_11").getDoubles() };
+        std::vector<double> U22{ block.get_value("_atom_site_aniso_U_22").getDoubles() };
+        std::vector<double> U33{ block.get_value("_atom_site_aniso_U_33").getDoubles() };
         std::vector<double> ueq;
         ueq.reserve(U11.size());
 
         for (size_t i{ 0 }; i < U11.size(); ++i) {
-            ueq.push_back(as_B * (U11[i] + U22[i] + U33[i]) / 3.0);
+            ueq.push_back((U11[i] + U22[i] + U33[i]) / 3.0);
         }
 
-        return v_to_str(ueq);
+        std::vector<std::string> r{};
+        r.resize(ueq.size());
+        std::transform(ueq.cbegin(), ueq.cend(), r.begin(), [](double d) { return std::format("{:.3f}", d * as_B); });
+
+        return r;
     }
 
     static std::optional<std::vector<std::string>> get_BEaniso_as_B(const row::cif::Block& block) {
-        if (!block.has_tag("_atom_site_aniso_beta_11"))
+        if (!block.contains("_atom_site_aniso_beta_11"))
             return std::nullopt;
 
-        std::vector<double> BE11{ str_to_v(block.get_value("_atom_site_aniso_beta_11")) };
-        std::vector<double> BE22{ str_to_v(block.get_value("_atom_site_aniso_beta_22")) };
-        std::vector<double> BE33{ str_to_v(block.get_value("_atom_site_aniso_beta_33")) };
+        std::vector<double> BE11{ block.get_value("_atom_site_aniso_beta_11").getDoubles() };
+        std::vector<double> BE22{ block.get_value("_atom_site_aniso_beta_22").getDoubles() };
+        std::vector<double> BE33{ block.get_value("_atom_site_aniso_beta_33").getDoubles() };
 
-        const UnitCellVectors usv = UnitCellVectors(block.get_value("_cell_length_a")[0], 
-                                                    block.get_value("_cell_length_b")[0], 
-                                                    block.get_value("_cell_length_c")[0],
-                                                    block.get_value("_cell_angle_alpha")[0], 
-                                                    block.get_value("_cell_angle_beta")[0], 
-                                                    block.get_value("_cell_angle_gamma")[0]);
+        const UnitCellVectors usv = UnitCellVectors(block.get_value("_cell_length_a").getDoubles()[0], 
+                                                    block.get_value("_cell_length_b").getDoubles()[0],
+                                                    block.get_value("_cell_length_c").getDoubles()[0],
+                                                    block.get_value("_cell_angle_alpha").getDoubles()[0],
+                                                    block.get_value("_cell_angle_beta").getDoubles()[0],
+                                                    block.get_value("_cell_angle_gamma").getDoubles()[0]);
 
-        const double mas{ square_magnitude(usv.as) };
-        const double mbs{ square_magnitude(usv.bs) };
-        const double mcs{ square_magnitude(usv.cs) };
+        const double mas{ usv.as.square_magnitude() };
+        const double mbs{ usv.bs.square_magnitude() };
+        const double mcs{ usv.cs.square_magnitude() };
 
         std::transform(BE11.begin(), BE11.end(), BE11.begin(), [&mas](double be) { return 4.0 * be / mas; });
         std::transform(BE22.begin(), BE22.end(), BE22.begin(), [&mbs](double be) { return 4.0 * be / mbs; });
@@ -601,7 +576,11 @@ public:
             beeq.push_back((BE11[i] + BE22[i] + BE33[i]) / 3.0);
         }
         
-        return v_to_str(beeq);
+        std::vector<std::string> r{};
+        r.resize(beeq.size());
+        std::transform(beeq.cbegin(), beeq.cend(), r.begin(), [](double d) { return std::format("{:.3f}", d); });
+
+        return r;
     }
 
     static std::unordered_map<std::string, std::string> make_beq_dict(const row::cif::Block& block, const std::string& b_type) {
@@ -633,12 +612,12 @@ public:
         bool all_good{ true };
 
         all_good = all_good && b_values.has_value();
-        all_good = all_good && (iso ? block.has_tag("_atom_site_label") : block.has_tag("_atom_site_aniso_label"));
+        all_good = all_good && (iso ? block.contains("_atom_site_label") : block.contains("_atom_site_aniso_label"));
 
         if (!all_good)
             return dict;
 
-        std::vector<std::string> b_labels = iso ? block.get_value("_atom_site_label") : block.get_value("_atom_site_aniso_label");
+        std::vector<std::string> b_labels = iso ? block.get_value("_atom_site_label").getStrings() : block.get_value("_atom_site_aniso_label").getStrings();
 
         all_good = all_good && (b_values.value().size() == b_labels.size());
 
@@ -646,10 +625,11 @@ public:
             return dict;
 
         dict.reserve(b_labels.size());
-        std::transform(b_labels.begin(), b_labels.end(), b_values.value().begin(), std::inserter(dict, dict.end()), [](const std::string& k, const std::string& v) {  return std::make_pair(k, v); });
+        std::transform(b_labels.cbegin(), b_labels.cend(), b_values.value().begin(), std::inserter(dict, dict.end()), 
+            [](const std::string& k, const std::string& v) {  return std::make_pair(k, v); });
         
         static const std::array bad_vals{ "nan", "0.000", ".", "?" };
-        std::erase_if(dict, [](const auto& kv) { auto const& [_, val] = kv; return is_in(val, bad_vals); });
+        std::erase_if(dict, [](const auto& kv) { auto const& [_, val] = kv; return contains(bad_vals, val); });
 
         return dict;
     }
@@ -658,12 +638,12 @@ public:
         std::vector<std::string> atoms{};
         atoms.reserve(block.get_value("_atom_site_label").size());
 
-        if (block.has_tag("_atom_site_type_symbol")) {
-            atoms = fix_atom_types(block.get_value("_atom_site_type_symbol"));
+        if (block.contains("_atom_site_type_symbol")) {
+            atoms = fix_atom_types(block.get_value("_atom_site_type_symbol").getStrings());
         }
         else {
             logger.log(Logger::Level::WARNING, "Atom types inferred from site labels. Please check for correctness.");
-            atoms = labels_to_atoms(block.get_value("_atom_site_label"));
+            atoms = labels_to_atoms(block.get_value("_atom_site_label").getStrings());
         }
 
         return pad_column_i(atoms);
@@ -673,8 +653,8 @@ public:
         std::vector<std::string> occs{};
         occs.reserve(block.get_value("_atom_site_label").size());
 
-        if (block.has_tag("_atom_site_occupancy")) {
-            occs = block.get_value("_atom_site_occupancy");
+        if (block.contains("_atom_site_occupancy")) {
+            occs = block.get_value("_atom_site_occupancy").getStrings();
         }
         else {
             logger.log(Logger::Level::WARNING, "No occupancies found. All set to 1.");
@@ -690,7 +670,7 @@ public:
             all_beqs[beq] = make_beq_dict(block, beq);
         }
 
-        const std::vector<std::string>& labels = block.get_value("_atom_site_label");     
+        const std::vector<std::string>& labels = block.get_value("_atom_site_label").getStrings();
         std::vector<std::string> beqs{};
         beqs.reserve(labels.size());
 
@@ -737,8 +717,10 @@ public:
 
 export class CrystalStructure {
 public:
-    CrystalStructure(const row::cif::Block& block, std::string source = std::string())
-        : is_good{ check_block(block) }, source { std::move(source) }, phase_name{ make_phase_name(block) }, space_group{ make_space_group(block) }, sites{ block }, unitcell{ block }, m_ss{ create_string() } {}
+    CrystalStructure(const row::cif::Block& block, std::string block_name, std::string source = std::string())
+        : is_good{ check_block(block) }, block_name{ std::move(block_name) }, source { std::move(source) }, 
+        phase_name{ make_phase_name(block) }, space_group{ make_space_group(block) }, sites{ block }, unitcell{ block }, 
+        m_ss{ create_string() } {}
 
     const std::string& to_string() const {
         return m_ss;
@@ -750,6 +732,7 @@ public:
 
 private:
     bool is_good{ false };
+    std::string block_name{};
     std::string source{};
     std::string phase_name{};
     std::string space_group{};
@@ -766,18 +749,18 @@ private:
 
 public:
     bool check_block(const row::cif::Block& block) const {
-        if (std::all_of(must_have_tags.cbegin(), must_have_tags.cend(), [&block](const std::string& tag) { return block.has_tag(tag); }))
+        if (std::all_of(must_have_tags.cbegin(), must_have_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }))
             return true;
         else 
-            throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block.name));
+            throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block_name));
     }
 
 
     std::string make_phase_name(const row::cif::Block& block) const {
         std::string name{};
-        auto it = std::find_if(phase_name_tags.begin(), phase_name_tags.end(), [&block](const std::string& tag) {return block.has_tag(tag); });
+        auto it = std::find_if(phase_name_tags.begin(), phase_name_tags.end(), [&block](const std::string& tag) {return block.contains(tag); });
         if (it != phase_name_tags.end()) {
-        name = block.get_value(*it)[0];
+            name = block.get_value(*it).getStrings()[0];
         }
 
         replace_i(name, '\'', ' ');
@@ -786,14 +769,14 @@ public:
         replace_i(name, '\n', '_');
         replace_i(name, '\r', '_');
         
-        return name + "_" + block.name;
+        return name + "_" + block_name;
     }
 
     std::string make_space_group(const row::cif::Block& block) const {
         std::string sg{};
-        auto it = std::find_if(space_group_tags.begin(), space_group_tags.end(), [&block](const std::string& tag) {return block.has_tag(tag); });
+        auto it = std::find_if(space_group_tags.begin(), space_group_tags.end(), [&block](const std::string& tag) {return block.contains(tag); });
         if (it != space_group_tags.end()) {
-            sg = block.get_value(*it)[0];
+            sg = block.get_value(*it).getStrings()[0];
         }
 
         if (std::all_of(sg.begin(), sg.end(), [](const char& c) { return std::isdigit(c) != 0; })) {
