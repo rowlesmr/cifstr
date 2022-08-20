@@ -8,8 +8,8 @@
 #include <filesystem>
 #include "argparse/argparse.hpp"
 
-import pdqciflib;
-import cifstr;
+#include "row/pdqciflib.hpp"
+#include "cifstr.hpp"
 
 struct MyArgs : public argparse::Args {
     std::vector<std::string>& src_path = arg("input_files", "CIF file(s) you wish to convert.").multi_argument();          
@@ -18,11 +18,11 @@ struct MyArgs : public argparse::Args {
     bool& add_stuff = flag("s,stuff", "Add in the scale factor and other nice stuff to make the STR immediately useable."); 
     bool& do_all_blocks = flag("a,all", "Do all the blocks in all the input_files.");                                       
     bool& write_many_files = flag("m,many", "Output each block as its own STR file. Uses output_file as the basename");     
-    bool& print_info = flag("i,info", "Print information about what is going on.");                                       
+    bool& print_info = flag("i,info", "Print information about what the program does.");                                       
 
     bool& printargs = flag("print", "A flag to toggle printing the argument values.");
 
-    void welcome() {
+    void welcome() override {
         std::cout << "Welcome to cifstr, a program to convert CIF files to TOPAS STR files." << '\n';
     }
 };
@@ -42,9 +42,9 @@ void print_block_to_file(const std::string& name, const std::string& source, con
 
 void info() {
     constexpr std::string_view sv 
-    {"This program is designed to reformat data from a CIF format into the STR format suitable\n"
-    "for use by the Rietveld analysis software, TOPAS. It doesn't carry out any validation checks\n"
-    "to ensure the data is consistent, but simply transcribes the data as given in the CIF.\n"
+    {"This program is designed to reformat data from CIF into the STR format suitable for use by\n"
+    "the Rietveld analysis software, TOPAS. It doesn't carry out any validation checks to ensure\n"
+    "the data is consistent, but simply transcribes the data as given in the CIF.\n"
     "\n"
     "Where similar or identical data could be given in several places, the values are taken in a\n"
     "specific order of precedence, as detailed in the sections below.In general, if a value exists\n"
@@ -91,6 +91,13 @@ void info() {
     "site following a refinement. This will allow the user to compare this value with the CIF or Vol A\n"
     "to help ensure that the correct symmetry is being applied.\n"
     "\n"
+    "There are many command line arguments to specialise the program's behaviour. The default behaviour\n"
+    "is to only output the last block of any CIF file, and to only write content that is present in the CIF.\n"
+	"The '-s' option adds a fixed Lorentzian crystallite size of 200 nm, and a refinable scale factor\n"
+	"of 0.0001 to allow for an easy start to a refinement. The '-a' option does all blocks present in a\n"
+    "CIF file. The '-m' option writes an output file for each block. The verbosity of the output to the screen\n"
+    "can be controlled with '-v'."
+    "\n"
     "If you have any feedback, please contact me.If you find any bugs, please provide the CIF which\n"
     "caused the error, a description of the error, and a description of how you believe the program\n"
     "should work in that instance.\n"
@@ -106,7 +113,19 @@ void info() {
 
 int main(int argc, char* argv[])
 {
+
+
+    std::cout << argv[1] << '\n';
+
+	if (strcmp(argv[1], "-i") == 0 || strcmp(argv[1], "--info") == 0) {
+        info();
+        exit(0);
+	}
+
+
+
     auto args = argparse::parse<MyArgs>(argc, argv);
+
     if (args.printargs) {
         args.print();      // prints all variables
     }
