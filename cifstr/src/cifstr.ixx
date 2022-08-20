@@ -70,7 +70,7 @@ static constexpr const std::array<std::string_view, 212> allowed_atoms
 
 
 std::string& fix_atom_type_i(std::string& atom) {
-    auto m = ctre::match<"([A-Za-z]{1,2})(\\d{0,2})([+\\-]{0,1})(\\d{0,2})">(atom);
+    auto m = ctre::match<"([A-Za-z]{1,2})(\\d{0,}\\.?\\d{0,})([+\\-]{0,1})(\\d{0,2})">(atom);
 
     std::string symbol { m.get<1>().to_string() }; 
     std::string charge { m.get<2>().to_string() }; 
@@ -96,7 +96,7 @@ std::string& fix_atom_type_i(std::string& atom) {
         return atom;
     }
 
-    logger.log(Logger::Verbosity::ALL, std::format("{0} is not a legal TOPAS scattering factor. Atom replaced with {1}.", new_atom, symbol));
+    logger.log(Logger::Verbosity::SOME, std::format("{0} is not a legal TOPAS scattering factor. Atom replaced with {1}.", new_atom, symbol));
     atom = symbol;
 
     return atom;
@@ -298,7 +298,6 @@ public:
         crystal_system{ deduce_symmetry() }, usv{ UnitCellVectors(a,b,c,al,be,ga) } {}
 
     UnitCell(const row::cif::Block& block) {
-    
         a_s = strip_brackets(block.get_value("_cell_length_a").getStrings()[0]);
         b_s = strip_brackets(block.get_value("_cell_length_b").getStrings()[0]);
         c_s = strip_brackets(block.get_value("_cell_length_c").getStrings()[0]);
@@ -731,7 +730,7 @@ private:
                                                  "_atom_site_label", "_atom_site_fract_x", "_atom_site_fract_y", "_atom_site_fract_z" };
 
 public:
-    CrystalStructure(const row::cif::Block& block, std::string block_name, std::string source = std::string(), int verbosity = 2, bool add_stuff = true)
+    CrystalStructure(const row::cif::Block& block, std::string block_name, std::string source = std::string(), int verbosity = 1, bool add_stuff = true)
         : is_good{ check_block(block, verbosity) }, block_name{ std::move(block_name) }, source { std::move(source) },
         phase_name{ make_phase_name(block) }, space_group{ make_space_group(block) }, sites{ block }, unitcell{ block }, 
         m_ss{ create_string(add_stuff) } {
