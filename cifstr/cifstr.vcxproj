@@ -104,6 +104,7 @@
     <LinkIncremental>false</LinkIncremental>
     <ExternalIncludePath>$(SolutionDir)cifstr\src\vendor\;$(ExternalIncludePath)</ExternalIncludePath>
     <IncludePath>$(SolutionDir)cifstr\src\vendor\;$(IncludePath)</IncludePath>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -175,6 +176,7 @@
       <EnableModules>true</EnableModules>
       <AdditionalModuleDependencies>%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
       <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
