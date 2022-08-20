@@ -22,11 +22,8 @@ export module cifstr;
 using namespace row;
 using namespace row::util;
 
-#ifdef _DEBUG
-static Logger logger{ Logger::Level::DEBUG };
-#else
-static Logger logger{ Logger::Level::INFO };
-#endif
+
+static Logger logger{};
 
 static constexpr double as_B{ 8 * std::numbers::pi * std::numbers::pi };
 
@@ -99,7 +96,7 @@ std::string& fix_atom_type_i(std::string& atom) {
         return atom;
     }
 
-    logger.log(Logger::Level::INFO, std::format("{0} is not a legal TOPAS scattering factor. Atom replaced with {1}.", new_atom, symbol));
+    logger.log(Logger::Verbosity::ALL, std::format("{0} is not a legal TOPAS scattering factor. Atom replaced with {1}.", new_atom, symbol));
     atom = symbol;
 
     return atom;
@@ -117,7 +114,7 @@ std::vector<std::string> fix_atom_types(std::vector<std::string> atoms) {
 
 std::string& label_to_atom_i(std::string& label) {
     if (contains(water, label.substr(0, 3))) {
-        logger.log(Logger::Level::WARNING, std::format("Site label '{0}' probably means 'water'. Please check that this atom really is oxygen.", label));
+        logger.log(Logger::Verbosity::SOME, std::format("Site label '{0}' probably means 'water'. Please check that this atom really is oxygen.", label));
         label = "O";
         return label;
     }
@@ -128,12 +125,12 @@ std::string& label_to_atom_i(std::string& label) {
     else if (contains(elements, label.substr(0, 1))) {
         std::string tmp = label.substr(0, 1);
         if (tmp == "W")
-            logger.log(Logger::Level::WARNING, std::format("W detected for site '{0}'. Do you mean oxygen from a water molecule or tungsten? Please check.", label));
+            logger.log(Logger::Verbosity::SOME, std::format("W detected for site '{0}'. Do you mean oxygen from a water molecule or tungsten? Please check.", label));
         label = tmp;
         return label;
     }
 
-    logger.log(Logger::Level::WARNING, std::format("Can't decide what atom the site label '{0}' should be. Please check it.", label));
+    logger.log(Logger::Verbosity::SOME, std::format("Can't decide what atom the site label '{0}' should be. Please check it.", label));
     return label;
 }
 
@@ -165,10 +162,10 @@ std::string& make_frac_i(std::string& coord, const std::string_view label="") {
 
     if (r.size() != 0) {
         if (label.size() == 0) {
-            logger.log(Logger::Level::INFO, std::format("Atomic site coordinate '{0}' replaced by '{1}'.", coord, r)); 
+            logger.log(Logger::Verbosity::ALL, std::format("Atomic site coordinate '{0}' replaced by '{1}'.", coord, r));
         }
         else {
-            logger.log(Logger::Level::INFO, std::format("Atomic fractional coordinate '{0}' replaced by '{1}' for site {2}.", coord, r, label));
+            logger.log(Logger::Verbosity::ALL, std::format("Atomic fractional coordinate '{0}' replaced by '{1}' for site {2}.", coord, r, label));
         }
         coord = r;
     }
@@ -302,12 +299,12 @@ public:
 
     UnitCell(const row::cif::Block& block) {
     
-        a_s = block.get_value("_cell_length_a").getStrings()[0];
-        b_s = block.get_value("_cell_length_b").getStrings()[0];
-        c_s = block.get_value("_cell_length_c").getStrings()[0];
-        al_s = block.get_value("_cell_angle_alpha").getStrings()[0];
-        be_s = block.get_value("_cell_angle_beta").getStrings()[0];
-        ga_s = block.get_value("_cell_angle_gamma").getStrings()[0];
+        a_s = strip_brackets(block.get_value("_cell_length_a").getStrings()[0]);
+        b_s = strip_brackets(block.get_value("_cell_length_b").getStrings()[0]);
+        c_s = strip_brackets(block.get_value("_cell_length_c").getStrings()[0]);
+        al_s = strip_brackets(block.get_value("_cell_angle_alpha").getStrings()[0]);
+        be_s = strip_brackets(block.get_value("_cell_angle_beta").getStrings()[0]);
+        ga_s = strip_brackets(block.get_value("_cell_angle_gamma").getStrings()[0]);
     
         a = block.get_value("_cell_length_a").getDoubles()[0];
         b = block.get_value("_cell_length_b").getDoubles()[0];
@@ -427,7 +424,7 @@ public:
 
     std::string to_string(size_t indent = 2) const {
         std::string tabs(indent, '\t');
-        return std::format("\t\tsite {1} num_posns 0\tx {2} y {3} z {4} occ {5} {6} beq {7}", tabs, label, x, y, z, atom, occ, beq);
+        return std::format("{0}site {1} num_posns 0\tx {2} y {3} z {4} occ {5} {6} beq {7}", tabs, label, x, y, z, atom, occ, beq);
     }
 };
 
@@ -480,7 +477,7 @@ public:
         std::for_each(beq.begin(), beq.end(), [&NAs](const std::string& b) {if (contains(NA_values, b)) ++NAs; });
 
         if (NAs > 0) {
-            logger.log(Logger::Level::INFO, std::format("{0} missing Biso values.", NAs));
+            logger.log(Logger::Verbosity::ALL, std::format("{0} missing Biso values.", NAs));
         }
         return beq;
     }
@@ -494,7 +491,7 @@ public:
         std::for_each(ueq.begin(), ueq.end(), [&NAs](const std::string& u) { if (contains(NA_values, u)) ++NAs;  });
 
         if (NAs > 0) {
-            logger.log(Logger::Level::INFO, std::format("{0} missing Uiso values.", NAs));
+            logger.log(Logger::Verbosity::ALL, std::format("{0} missing Uiso values.", NAs));
         }
 
         const std::vector<double>& ueq_dbl{ block.get_value("_atom_site_U_iso_or_equiv").getDoubles() };
@@ -642,7 +639,7 @@ public:
             atoms = fix_atom_types(block.get_value("_atom_site_type_symbol").getStrings());
         }
         else {
-            logger.log(Logger::Level::WARNING, "Atom types inferred from site labels. Please check for correctness.");
+            logger.log(Logger::Verbosity::SOME, "Atom types inferred from site labels. Please check for correctness.");
             atoms = labels_to_atoms(block.get_value("_atom_site_label").getStrings());
         }
 
@@ -657,7 +654,7 @@ public:
             occs = block.get_value("_atom_site_occupancy").getStrings();
         }
         else {
-            logger.log(Logger::Level::WARNING, "No occupancies found. All set to 1.");
+            logger.log(Logger::Verbosity::SOME, "No occupancies found. All set to 1.");
             occs = std::vector<std::string>(block.get_value("_atom_site_label").size(), "1.");
         }
         return pad_column_i(strip_brackets_i(occs));
@@ -683,22 +680,22 @@ public:
 
                 found = true;
                 if (beq == beq_types[1])
-                    logger.log(Logger::Level::INFO, std::format("beq value for site {0} calculated from isotropic U value.", label));
+                    logger.log(Logger::Verbosity::ALL, std::format("beq value for site {0} calculated from isotropic U value.", label));
                 else if (beq == beq_types[2])
-                    logger.log(Logger::Level::INFO, std::format("beq value for site {0} calculated from anisotropic B values", label));
+                    logger.log(Logger::Verbosity::ALL, std::format("beq value for site {0} calculated from anisotropic B values", label));
                 else if (beq == beq_types[3])
-                    logger.log(Logger::Level::INFO, std::format("beq value for site {0} calculated from anisotropic U values", label));
+                    logger.log(Logger::Verbosity::ALL, std::format("beq value for site {0} calculated from anisotropic U values", label));
                 else if (beq == beq_types[4])
-                    logger.log(Logger::Level::INFO, std::format("beq value for site {0} calculated from anisotropic beta values", label));
+                    logger.log(Logger::Verbosity::ALL, std::format("beq value for site {0} calculated from anisotropic beta values", label));
 
                 if ((it->second).starts_with('-')) {
-                    logger.log(Logger::Level::WARNING, std::format("Negative atomic displacement parameter detected for site {0}! Please check.", label));
+                    logger.log(Logger::Verbosity::SOME, std::format("Negative atomic displacement parameter detected for site {0}! Please check.", label));
                 }
                 beqs.push_back(it->second);
                 break;
             }
             if (!found) {
-                logger.log(Logger::Level::WARNING, std::format("beq value missing or zero for site {0}! Default value of '1.' entered.", label));
+                logger.log(Logger::Verbosity::SOME, std::format("beq value missing or zero for site {0}! Default value of '1.' entered.", label));
                 beqs.push_back("1.");
             }
         }
@@ -716,20 +713,6 @@ public:
 
 
 export class CrystalStructure {
-public:
-    CrystalStructure(const row::cif::Block& block, std::string block_name, std::string source = std::string())
-        : is_good{ check_block(block) }, block_name{ std::move(block_name) }, source { std::move(source) }, 
-        phase_name{ make_phase_name(block) }, space_group{ make_space_group(block) }, sites{ block }, unitcell{ block }, 
-        m_ss{ create_string() } {}
-
-    const std::string& to_string() const {
-        return m_ss;
-    }
-
-    const std::string& get_source() const {
-        return source;
-    }
-
 private:
     bool is_good{ false };
     std::string block_name{};
@@ -748,12 +731,51 @@ private:
                                                  "_atom_site_label", "_atom_site_fract_x", "_atom_site_fract_y", "_atom_site_fract_z" };
 
 public:
-    bool check_block(const row::cif::Block& block) const {
-        if (std::all_of(must_have_tags.cbegin(), must_have_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }))
-            return true;
-        else 
-            throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block_name));
+    CrystalStructure(const row::cif::Block& block, std::string block_name, std::string source = std::string(), int verbosity = 2, bool add_stuff = true)
+        : is_good{ check_block(block, verbosity) }, block_name{ std::move(block_name) }, source { std::move(source) },
+        phase_name{ make_phase_name(block) }, space_group{ make_space_group(block) }, sites{ block }, unitcell{ block }, 
+        m_ss{ create_string(add_stuff) } {
+    
+        
     }
+
+    const std::string& to_string() const {
+        return m_ss;
+    }
+
+    const std::string& get_source() const {
+        return source;
+    }
+
+    std::string create_string(bool add_stuff, size_t indent = 1) const {
+        std::string tab(indent, '\t');
+        std::string tabs(indent+1, '\t');
+
+        std::string s{ "\tstr '" };
+        s += source + '\n';
+        s += "\t\tphase_name \"" + phase_name + "\"\n";
+        if (add_stuff) {
+            s += "\t\tPhase_Density_g_on_cm3( 0)\n";
+            s += "\t\tCS_L( ,200)\n";
+            s += "\t\tMVW(0,0,0)\n";
+            s += "\t\tscale @ 0.0001\n";
+        }
+        s += unitcell.to_string() + '\n';
+        s += "\t\tspace_group \"" + space_group + "\"\n";
+        s += sites.to_string() + '\n';
+        return s;
+    }
+
+
+private:
+    bool check_block(const row::cif::Block& block, int verbosity) const {
+        logger.verbosity = static_cast<Logger::Verbosity>(verbosity);
+        if (std::all_of(must_have_tags.cbegin(), must_have_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }) &&
+            std::any_of(space_group_tags.cbegin(), space_group_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }))
+            return true;
+        else
+            throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block_name));
+     }
 
 
     std::string make_phase_name(const row::cif::Block& block) const {
@@ -780,24 +802,11 @@ public:
         }
 
         if (std::all_of(sg.begin(), sg.end(), [](const char& c) { return std::isdigit(c) != 0; })) {
-            logger.log(Logger::Level::INFO, "Spacegroup given by number. Check that the SG setting matches that of the atom coordinates.");
+            logger.log(Logger::Verbosity::SOME, "Spacegroup given by number. Check that the SG setting matches that of the atom coordinates.");
         }
 
         return sg;
     }
 
-    std::string create_string() const{
-        std::string s{ "\tstr '" };
-        s += source + '\n';
-        s += "\t\tphase_name \"" + phase_name + "\"\n";
-        s += "\t\tPhase_Density_g_on_cm3( 0)\n";
-        s += "\t\tCS_L( ,200)\n";
-        s += "\t\tMVW(0,0,0)\n";
-        s += "\t\tscale @ 0.0001\n";
-        s += unitcell.to_string() + '\n';
-        s += "\t\tspace_group \"" + space_group + "\"\n";
-        s += sites.to_string() + '\n';
-        return s;
-    }
 };
 

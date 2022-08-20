@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <string_view>
 
 export module logger;
 
@@ -10,42 +11,34 @@ namespace row {
     export class Logger
     {
     public:
-        enum Level { DEBUG, INFO, WARNING, ERROR, CRITICAL };
+        enum Verbosity { NONE, SOME, ALL };
+        Verbosity verbosity{ ALL };
 
     private:
-        Level level{ DEBUG };
-        static constexpr std::array level_names{ "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL" };
+        static constexpr std::array<std::string_view, 3> level_names {"NONE", "SOME", "ALL"};
 
     public:
-        Logger(Level lev)
-            :level{ lev }
+        Logger(Verbosity lev)
+            :verbosity{ lev }
         {
-            if (level == DEBUG) {
-                std::cout << "[" << level_names[level] << "]: " << "LOGGER set to: " << level_names[level] << '\n';
+            if (verbosity == ALL) {
+                std::cout << "[" << level_names[verbosity] << "]: " << "LOGGER set to: " << level_names[verbosity] << '\n';
             }
         }
-        Logger()
-            : Logger(Level::DEBUG) {}
+        Logger() = default;
 
         ~Logger()
         {
-            if (level == DEBUG) {
-                std::cout << "[" << level_names[level] << "]: " << " LOGGER destroyed" << std::endl;
+            if (verbosity == ALL) {
+                std::cout << "[" << level_names[verbosity] << "]: " << " LOGGER destroyed" << std::endl;
             }
         }
 
-        void log(Level lev, std::string message) const {
-            if (lev >= level) {
+        void log(Verbosity lev, const std::string_view message) const {
+            if (lev <= verbosity) {
                 std::cout << "[" << level_names[lev] << "]: " << message << '\n';
             }
         }
-
-        void setLevel(Level lev) {
-            level = lev;
-        }
-
-
     };
-
 
 }

@@ -20,11 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\application.cpp" />
-    <ClCompile Include="src\cif2.cpp" />
-    <ClCompile Include="src\cif_file.ixx" />
+    <ClCompile Include="src\cifexcept.ixx" />
+    <ClCompile Include="src\ciffile.ixx" />
+    <ClCompile Include="src\cifparse.ixx" />
     <ClCompile Include="src\cifstr.ixx" />
-    <ClCompile Include="src\cif.ixx" />
     <ClCompile Include="src\logger.ixx" />
+    <ClCompile Include="src\pdqciflib.ixx" />
     <ClCompile Include="src\util.ixx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -166,6 +167,8 @@
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <EnableModules>true</EnableModules>
+      <AdditionalModuleDependencies>%(AdditionalModuleDependencies)</AdditionalModuleDependencies>
+      <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -173,6 +176,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;setargv.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

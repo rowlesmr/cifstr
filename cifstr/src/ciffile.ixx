@@ -1284,6 +1284,7 @@ export namespace row::cif {
 		}
 
 		struct const_iterator;
+
 	public:
 		Cif() {}
 		explicit Cif(std::string source) : m_source(std::move(source)) {}
@@ -1294,6 +1295,10 @@ export namespace row::cif {
 
 		const Block& getLastBlock() const {
 			return m_cif.at(m_block_order.back());
+		}
+
+		const blockname& getLastBlockName() const {
+			return m_block_order.back();
 		}
 
 		const std::string& getSource() const {

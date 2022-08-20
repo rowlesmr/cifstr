@@ -15,25 +15,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\cifstr.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cif_file.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cif.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cifexcept.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ciffile.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cifparse.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cifstr.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\logger.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cif2.cpp">
+    <ClCompile Include="src\pdqciflib.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
