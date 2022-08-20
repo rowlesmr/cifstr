@@ -8,8 +8,8 @@
 #include <filesystem>
 #include "argparse/argparse.hpp"
 
-import pdqciflib;
-import cifstr;
+#include "row/pdqciflib.hpp"
+#include "cifstr.hpp"
 
 struct MyArgs : public argparse::Args {
     std::vector<std::string>& src_path = arg("input_files", "CIF file(s) you wish to convert.").multi_argument();          

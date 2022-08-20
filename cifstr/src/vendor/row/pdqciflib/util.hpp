@@ -1,13 +1,56 @@
+
+
+#ifndef ROW_UTIL_HPP
+#define ROW_UTIL_HPP
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <numbers>
 #include <format>
+#include <array>
+#include <string_view>
 
-export module util;
 
-export namespace row::util {
+namespace row::util {
+
+	class Logger
+	{
+	public:
+		enum Verbosity { NONE, SOME, ALL, EVERYTHING };
+		Verbosity verbosity{ ALL };
+
+	private:
+		static constexpr std::array<std::string_view, 4> level_names{ "NONE", "SOME", "ALL", "EVERYTHING" };
+
+	public:
+		Logger(Verbosity lev)
+			:verbosity{ lev }
+		{
+			if (verbosity == EVERYTHING) {
+				std::cout << "LOGGER set to: " << level_names[verbosity] << '\n';
+			}
+		}
+		Logger() = default;
+
+		~Logger()
+		{
+			if (verbosity == EVERYTHING) {
+				std::cout << " LOGGER destroyed" << std::endl;
+			}
+		}
+
+		void log(Verbosity lev, const std::string_view message) const {
+			if (lev <= verbosity) {
+				std::cout << message << '\n';
+			}
+		}
+	};
+
+
+
+
 
 	void toLower_i(std::string& str) {
 		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -16,7 +59,6 @@ export namespace row::util {
 		toLower_i(str);
 		return str;
 	}
-
 	void toLower_i(std::vector<std::string>& strs) {
 		for (std::string& str : strs) {
 			toLower_i(str);
@@ -100,7 +142,7 @@ export namespace row::util {
 		}
 		//get the digits after the decimal point
 		if (c == '.' || c == '?') {
-			if (len == 1) {
+			if (len == 1) { // then it is a value that represent missing or unknown
 				return std::pair<double, double>({ NaN, 0 });
 			}
 			while ((c = *s++) != '\0' && std::isdigit(c)) {
@@ -191,18 +233,16 @@ export namespace row::util {
 		return std::all_of(++it, list.end(), [&list](double val) { return are_equal(*list.begin(), val); });
 	}
 
-
-
-	void pad_right_i(std::string& s, size_t len)
+	std::string& pad_right_i(std::string& s, size_t len)
 	{
 		s = std::format("{0:{1}}", s, len);
-		return;
+		return s;
 	}
 
-	void pad_left_i(std::string& s, size_t len)
+	std::string& pad_left_i(std::string& s, size_t len)
 	{
 		s = std::format("{0:>{1}}", s, len);
-		return;
+		return s;
 	}
 
 	std::vector<std::string>& pad_column_i(std::vector<std::string>& v) {
@@ -241,3 +281,5 @@ export namespace row::util {
 		return s;
 	}
 }
+
+#endif

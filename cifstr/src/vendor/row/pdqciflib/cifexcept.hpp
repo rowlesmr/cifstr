@@ -1,13 +1,14 @@
 
+
+#ifndef ROW_CIFEXCEPT_HPP
+#define ROW_CIFEXCEPT_HPP
+
 #include <stdexcept>
 #include <string>
 #include <memory>
 
 
-export module cifexcept;
-
-
-export namespace row::cif {
+namespace row::cif {
 
     namespace internal
     {
@@ -107,3 +108,4 @@ export namespace row::cif {
 
 }
 
+#endif

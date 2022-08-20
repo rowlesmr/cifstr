@@ -1,4 +1,7 @@
 
+#ifndef ROW_CIFFILE_HPP
+#define ROW_CIFFILE_HPP
+
 
 
 #include <iostream>
@@ -13,12 +16,12 @@
 #include <utility>
 #include <string_view>
 
-import util;
-import cifexcept;
+#include "util.hpp"
+#include "cifexcept.hpp"
 
-export module ciffile;
 
-export namespace row::cif {
+
+namespace row::cif {
 
 	using dataname = std::string;
 	using datanameview = std::string_view;
@@ -1606,3 +1609,4 @@ export namespace row::cif {
 	};
 }
 
+#endif // !ROW_CIFFILE_HPP

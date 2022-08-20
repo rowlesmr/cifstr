@@ -1,12 +1,14 @@
 
+#ifndef ROW_CIFPARSE_HPP
+#define ROW_CIFPARSE_HPP
+
+
 #include <iostream>
 #include <stdexcept>
 #include "tao/pegtl.hpp"
 
-import ciffile;
-import cifexcept;
-
-export module cifparse;
+#include "ciffile.hpp"
+#include "cifexcept.hpp"
 
 namespace row::cif {
 
@@ -328,23 +330,16 @@ namespace row::cif {
     }
 
     //read in a file into a Cif. Will throw std::runtime_error if it encounters problems
-    export Cif read_file(const std::string& filename, bool overwrite = false) noexcept(false) {
+    Cif read_file(const std::string& filename, bool overwrite = false) noexcept(false) {
         pegtl::file_input in(filename);
         return read_input(in, overwrite);
     }
 
     //read a string into a Cif. Will throw std::runtime_error if it encounters problems
-    export Cif read_string(const std::string& cifstring, bool overwrite = false, const std::string& source = "string") noexcept(false) {
+    Cif read_string(const std::string& cifstring, bool overwrite = false, const std::string& source = "string") noexcept(false) {
         pegtl::string_input in(cifstring, source);
         return read_input(in, overwrite);
     }
 
-
-
-
-
-
-
-
-
 }
+#endif // !ROW_CIFPARSE_HPP

@@ -1,4 +1,7 @@
 
+#ifndef ROW_CIFSTR_HPP
+#define ROW_CIFSTR_HPP
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -14,10 +17,8 @@
 
 #include "ctre/ctre.hpp"
 
-import logger;
-import pdqciflib;
+#include "row/pdqciflib.hpp"
 
-export module cifstr;
 
 using namespace row;
 using namespace row::util;
@@ -809,3 +810,4 @@ private:
 
 };
 
+#endif
