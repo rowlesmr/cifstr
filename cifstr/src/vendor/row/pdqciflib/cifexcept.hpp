@@ -10,14 +10,13 @@
 
 namespace row::cif {
 
-    namespace internal
-    {
+    namespace internal {
         class concreteException {
         private:
             std::string m_msg;
         public:
-            explicit concreteException(const char* msg) : m_msg(msg) {}
-            [[nodiscard]] const char* what() const noexcept { return m_msg.c_str(); }
+            explicit concreteException(const char* msg);
+            [[nodiscard]] const char* what() const noexcept;
         };
 
     } 
@@ -28,15 +27,10 @@ namespace row::cif {
         std::shared_ptr<internal::concreteException> m_impl;
 
     public:
-        no_such_tag_error(const char* msg)
-            : std::out_of_range(msg),
-            m_impl(std::make_shared<internal::concreteException>(msg))  {}
-        no_such_tag_error(const std::string& msg)
-            : no_such_tag_error(msg.c_str()) {}
+        no_such_tag_error(const char* msg);
+        no_such_tag_error(const std::string& msg);
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return m_impl->what();
-        }
+        [[nodiscard]] const char* what() const noexcept override;
     };
 
     class tag_already_exists_error : public std::runtime_error {
@@ -44,16 +38,10 @@ namespace row::cif {
         std::shared_ptr<internal::concreteException> m_impl;
 
     public:
-        tag_already_exists_error(const char* msg)
-            : std::runtime_error(msg),
-            m_impl(std::make_shared<internal::concreteException>(msg)) {}
-        tag_already_exists_error(const std::string& msg)
-            : std::runtime_error(msg.c_str()),
-            m_impl(std::make_shared<internal::concreteException>(msg.c_str())) {}
+        tag_already_exists_error(const char* msg);
+        tag_already_exists_error(const std::string& msg);
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return m_impl->what();
-        }
+        [[nodiscard]] const char* what() const noexcept override;
     };
 
     class loop_length_mismatch_error : public std::runtime_error {
@@ -61,16 +49,10 @@ namespace row::cif {
         std::shared_ptr<internal::concreteException> m_impl;
 
     public:
-        loop_length_mismatch_error(const char* msg)
-            : std::runtime_error(msg),
-            m_impl(std::make_shared<internal::concreteException>(msg)) {}
-        loop_length_mismatch_error(const std::string& msg)
-            : std::runtime_error(msg.c_str()),
-            m_impl(std::make_shared<internal::concreteException>(msg.c_str())) {}
+        loop_length_mismatch_error(const char* msg);
+        loop_length_mismatch_error(const std::string& msg);
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return m_impl->what();
-        }
+        [[nodiscard]] const char* what() const noexcept override;
     };
 
     class tag_value_mismatch_error : public std::runtime_error {
@@ -78,16 +60,10 @@ namespace row::cif {
         std::shared_ptr<internal::concreteException> m_impl;
 
     public:
-        tag_value_mismatch_error(const char* msg)
-            : std::runtime_error(msg),
-            m_impl(std::make_shared<internal::concreteException>(msg)) {}
-        tag_value_mismatch_error(const std::string& msg)
-            : std::runtime_error(msg.c_str()),
-            m_impl(std::make_shared<internal::concreteException>(msg.c_str())) {}
+        tag_value_mismatch_error(const char* msg);
+        tag_value_mismatch_error(const std::string& msg);
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return m_impl->what();
-        }
+        [[nodiscard]] const char* what() const noexcept override;
     };
 
     class illegal_tag_error : public std::runtime_error {
@@ -95,15 +71,10 @@ namespace row::cif {
         std::shared_ptr<internal::concreteException> m_impl;
 
     public:
-        illegal_tag_error(const char* msg)
-            : std::runtime_error(msg),
-            m_impl(std::make_shared<internal::concreteException>(msg)) {}
-        illegal_tag_error(const std::string& msg)
-            : illegal_tag_error(msg.c_str()) {}
+        illegal_tag_error(const char* msg);
+        illegal_tag_error(const std::string& msg);
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return m_impl->what();
-        }
+        [[nodiscard]] const char* what() const noexcept override;
     };
 
 }
