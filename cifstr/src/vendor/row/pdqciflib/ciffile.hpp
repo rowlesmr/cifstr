@@ -152,8 +152,6 @@ namespace row::cif {
 		//}
 	};
 
-
-
 	//class ItemOrder {
 	//public:
 	//	using group_iterator = std::vector<std::vector<dataname>>::iterator;
@@ -339,8 +337,6 @@ namespace row::cif {
 	//	}
 	//};
 
-
-
 	class Block {
 	public:
 		using itemorder = std::variant<int, dataname>;
@@ -506,16 +502,10 @@ namespace row::cif {
 
 			const_reference operator*() const;
 			const_pointer operator->();
-
-			// Prefix increment
-			const_iterator& operator++();
-
-			// Prefix decrement
-			const_iterator& operator--();
-
-			// Postfix increment/decrement
-			const_iterator operator++(int);
-			const_iterator operator--(int);
+			const_iterator& operator++(); // Prefix increment
+			const_iterator& operator--(); // Prefix decrement
+			const_iterator operator++(int);// Postfix increment/decrement
+			const_iterator operator--(int);// Postfix increment/decrement
 
 			friend bool operator== (const const_iterator& a, const const_iterator& b) { return a.m_ptr == b.m_ptr; };
 			friend bool operator!= (const const_iterator& a, const const_iterator& b) { return a.m_ptr != b.m_ptr; };
