@@ -88,7 +88,7 @@ struct MyArgs : public argparse::Args {
     bool& write_many_files = flag("m,many", "Output each block as its own STR file. Uses output_file as the basename");     
     bool& print_info = flag("i,info", "Print information about what the program does.");                                       
 
-    bool& printargs = flag("print", "A flag to toggle printing the argument values.");
+    bool& printargs = flag("print", "A flag to toggle printing the argument values. Useful for debugging.");
 
     void welcome() override {
         std::cout << "Welcome to cifstr, a program to convert CIF files to TOPAS STR files." << '\n';
@@ -109,7 +109,7 @@ void print_block_to_file(const std::string& name, const std::string& source, con
 
 int main(int argc, char* argv[])
 {
-    //work around argparse not liking not having the two default positional arguments
+	//work around argparse not liking not having the two default positional arguments
 	if (argc == 2 && (strcmp(argv[1], "-i") == 0 || strcmp(argv[1], "--info") == 0)) {
         info();
         exit(0);

@@ -38,6 +38,8 @@ namespace row::util {
 	std::vector<std::string>& toLower_i(std::vector<std::string>& strs);
 	std::vector<std::string> toLower(std::vector<std::string> strs);
 
+	bool icompare(const std::string_view sva, const std::string_view svb);
+
 	template<typename C, typename F>
 	bool contains(const C& c, const F& f);
 

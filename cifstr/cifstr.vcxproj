@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Header.cpp" />
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\cifstr.cpp" />
     <ClCompile Include="src\cifstr.hpp" />
@@ -28,6 +29,7 @@
     <ClCompile Include="src\vendor\row\pdqciflib\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Header.hpp" />
     <ClInclude Include="src\vendor\row\pdqciflib.hpp" />
     <ClInclude Include="src\vendor\row\pdqciflib\cifexcept.hpp" />
     <ClInclude Include="src\vendor\row\pdqciflib\ciffile.hpp" />
