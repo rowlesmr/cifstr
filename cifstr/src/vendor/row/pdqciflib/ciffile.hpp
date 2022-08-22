@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include <variant>
+#include <variant>  
 #include <iterator> // For std::forward_iterator_tag
 #include <cstddef>  // For std::ptrdiff_t
 #include <format>
@@ -23,10 +23,35 @@
 
 namespace row::cif {
 
+	// after https://stackoverflow.com/a/8627711/36061, https://stackoverflow.com/a/53613999/36061, https://github.com/microsoft/STL/issues/683
+	struct CaseInsensitiveEqual
+	{
+		using is_transparent = void;
+
+		bool operator()(const std::string& left, const std::string_view right) const;
+		bool operator()(const std::string_view left, const std::string_view right) const;
+
+		bool compare(const std::string_view left, const std::string_view right) const;
+	};
+
+	//after https://stackoverflow.com/a/107657/36061, https://stackoverflow.com/a/53613999/36061, https://www.cppstories.com/2021/heterogeneous-access-cpp20/
+	struct CaseInsensitiveHash
+	{
+		using is_transparent = void;
+		using transparent_key_equal = CaseInsensitiveEqual;
+
+		[[nodiscard]] size_t operator()(const char* txt) const;
+		[[nodiscard]] size_t operator()(const std::string& txt) const;
+		[[nodiscard]] size_t operator()(const std::string_view txt) const;
+
+		size_t makeHash(const std::string_view key) const;
+	};
+
+
+
 	using dataname = std::string;
-	using datanameview = std::string_view;
-	template< typename K, typename V>
-	using dict = std::unordered_map<K, V>;
+	using dataname_view = std::string_view;
+	using datavalue_view = std::string_view;
 
 
 	class Datavalue {
@@ -47,7 +72,7 @@ namespace row::cif {
 		mutable bool m_isConverted{ false };
 		
 	public:
-		Datavalue();
+		Datavalue()=default;
 		Datavalue(const std::string& in);
 		Datavalue(std::string&& in);
 		Datavalue(const std::vector<std::string>& in);
@@ -343,10 +368,9 @@ namespace row::cif {
 		//using item = typename dict<dataname, Datavalue>::value_type;
 
 	private:
-		dict<dataname, Datavalue> m_block{}; // this is the actual data
-		dict<int, std::vector<dataname>> m_loops{}; // keeps track of datanames that are looped together
+		std::unordered_map<dataname, Datavalue, CaseInsensitiveHash, CaseInsensitiveEqual> m_block{}; // this is the actual data
+		std::unordered_map<int, std::vector<dataname>> m_loops{}; // keeps track of datanames that are looped together
 		std::vector<itemorder> m_item_order{}; // keeps the insertion order
-		dict<dataname, dataname> m_true_case{}; // keeps the actual case of the tags used.
 		dataname name{}; //the name of the block to which this data belongs -> must be set through the Cif which this Block belongs.
 
 	public:
@@ -356,59 +380,67 @@ namespace row::cif {
 		void print_block() const;
 		void print_loops() const;
 		void print_item_order() const;
-		void print_true_case() const;
 
 		struct const_iterator;
 
 	public:
 		Block() = default;
 		explicit Block(bool ow);
-		explicit Block(dataname name);
-		Block(dataname name, bool ow);
 
 		const_iterator addItem(dataname tag, Datavalue value) noexcept(false);
 		const_iterator addItems(const std::vector<dataname>& tags, const std::vector<Datavalue>& values) noexcept(false);
 		const_iterator addItemsAsLoop(const std::vector<dataname>& tags, const std::vector<Datavalue>& values) noexcept(false);
-		const_iterator createLoop(const std::vector<dataname>& tags) noexcept(false);
-		const_iterator addNameToLoop(const dataname& newName, const dataname& oldName) noexcept(false);
+		const_iterator createLoop(std::vector<dataname> tags) noexcept(false);
+		const_iterator addNameToLoop(dataname newName, const dataname_view oldName) noexcept(false);
+		const_iterator removeItem(const dataname_view tag);
 
-		int getLoopNum(const std::string& tag) const;
+		int getLoopNum(const dataname_view tag) const;
 
-		const std::vector<dataname>& getLoopNames(const dataname& tag) const noexcept(false);
+		const std::vector<dataname>& getLoopNames(const dataname_view tag) const noexcept(false);
 
-		bool isInLoop(const dataname& tag) const;
+		bool isInLoop(const dataname_view tag) const;
 
-		const_iterator removeItem(const dataname& tag);
-		Datavalue getAssociatedValue(const dataname& tag, const std::string& value, const dataname& associatedTag);
-		std::tuple<int, int> getItemPosition(const dataname& tag) const;
-		const_iterator changeItemPosition(const dataname& tag, const size_t newPosn);
-		const_iterator changeLoopPosition(const dataname& tag, const size_t newPosn);
+		Datavalue getAssociatedValue(const dataname_view tag, const datavalue_view value, const dataname_view associatedTag);
+		std::tuple<int, int> getItemPosition(const dataname_view tag) const;
+		const_iterator changeItemPosition(const dataname_view tag, const size_t newPosn);
+		const_iterator changeLoopPosition(const dataname_view tag, const size_t newPosn);
+		std::vector<std::string> getInvalidLoopLengths() const; //Why is this here? What does it do?
 
-		//why is this here?
-		std::vector<std::string> getInvalidLoopLengths() const;
+		const Datavalue& getValue(const dataname_view tag) const;
+		const Datavalue& get(const dataname_view tag) const;
 
-		const_iterator set(const dataname& tag, const Datavalue& value);
-		const_iterator put(const dataname& tag, const Datavalue& value);
-		const Datavalue& get(const dataname& tag) const;
-		const Datavalue& get_value(const dataname& tag) const;
+		std::vector<dataname> getAllTags() const;
+		std::vector<Datavalue> getAllValues() const;
 
-		const dataname& getName() const;
-
-		std::vector<dataname> getNames() const;
-		std::vector<dataname> tags() const;
-
-		std::vector<Datavalue> getValues() const;
-		std::vector<Datavalue> values() const;
-
-		std::string makeStringLength(dataname tag, size_t len) const;
-
+		std::string makeStringLength(const dataname_view tag, size_t len) const;
 		std::string formatValue(std::string value) const;
-
 		void print(bool pretty = true) const;
+		[[nodiscard]] std::string to_string(bool pretty=true) const;
 
-		std::string to_string(bool pretty=true) const;
+		//Iterators
+		const_iterator begin() const noexcept;
+		const_iterator end() const noexcept;
+		const_iterator cbegin() const noexcept;
+		const_iterator cend() const noexcept;
 
+		//capacity
+		[[nodiscard]] bool empty() const noexcept;
+		[[nodiscard]] bool isEmpty() const noexcept;
+		size_t size() const noexcept;
+		int size(const dataname_view tag) const noexcept;
+		size_t max_size() const noexcept;
 
+		// Modifiers
+		void clear() noexcept;
+		size_t erase(const dataname_view tag);
+
+		// Lookup
+		const Datavalue& at(const dataname_view tag) const;
+		size_t count(const dataname_view tag) const;
+		const_iterator find(const dataname_view tag) const;
+		bool contains(const dataname_view tag) const;
+
+		//iterator implementation
 		//struct Iterator
 		//// taken from https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 		//{
@@ -480,11 +512,10 @@ namespace row::cif {
 		//	Block* block;
 		//};
 
-
 		//// taken from https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
 		struct const_iterator
 		{
-		public:		
+		public:
 			using iterator_category = std::bidirectional_iterator_tag;
 			using difference_type = std::ptrdiff_t;
 			using value_type = std::pair<const dataname, Datavalue>;
@@ -496,7 +527,7 @@ namespace row::cif {
 		private:
 			const_pointer m_ptr;
 			const Block* block;
-		
+
 		public:
 			const_iterator(const_pointer m_ptr, const Block* blk);
 
@@ -504,8 +535,8 @@ namespace row::cif {
 			const_pointer operator->();
 			const_iterator& operator++(); // Prefix increment
 			const_iterator& operator--(); // Prefix decrement
-			const_iterator operator++(int);// Postfix increment/decrement
-			const_iterator operator--(int);// Postfix increment/decrement
+			const_iterator operator++(int);// Postfix increment
+			const_iterator operator--(int);// Postfix decrement
 
 			friend bool operator== (const const_iterator& a, const const_iterator& b) { return a.m_ptr == b.m_ptr; };
 			friend bool operator!= (const const_iterator& a, const const_iterator& b) { return a.m_ptr != b.m_ptr; };
@@ -516,29 +547,6 @@ namespace row::cif {
 			const_pointer nextPtr(size_t currIndex, dataname& currentTag);
 		};
 
-		//Iterators
-		const_iterator begin() const noexcept;
-		const_iterator end() const noexcept;
-		const_iterator cbegin() const noexcept;
-		const_iterator cend() const noexcept;
-
-		//capacity
-		[[nodiscard]] bool empty() const noexcept;
-		[[nodiscard]] bool isEmpty() const noexcept;
-		size_t size() const noexcept;
-		int size(const dataname& tag) const noexcept;
-		size_t max_size() const noexcept;
-
-		// Modifiers
-		void clear() noexcept;
-		size_t erase(const dataname& tag);
-
-		// Lookup
-		const Datavalue& at(const dataname& tag) const;
-		size_t count(const dataname& tag) const;
-		const_iterator find(const dataname& tag) const;
-		bool contains(const dataname& tag) const;
-
 	private:
 		std::pair<const dataname, Datavalue>* ptrToFirstItem();
 		std::pair<const dataname, Datavalue>* constptrToFirstItem() const;
@@ -548,45 +556,70 @@ namespace row::cif {
 	class Cif {
 	public:
 		using blockname = std::string;
+		using blockname_view = std::string_view;
 
 	private:
-		dict<blockname, Block> m_cif{}; // this is the actual data
+		std::unordered_map<blockname, Block, CaseInsensitiveHash, CaseInsensitiveEqual> m_cif{}; // this is the actual data
 		std::vector<blockname> m_block_order{}; // keeps the insertion order
-		dict<blockname, blockname> m_true_case{}; // keeps the actual case of the blocknames used.
 
 		std::string m_source{};
-		bool m_overwrite{ true };
+		bool m_overwrite{ false };
 	public:
 
 		//these print_* functions are for debugging purposes
 		void print_cif() const;
 		void print_block_order() const;
-		void print_true_case() const;
 
 		struct const_iterator;
 
 	public:
-		Cif();
-		explicit Cif(std::string source);
-		Block& getLastBlock();
+		Cif() = default;
+		explicit Cif(blockname source);
 
+		Block& getLastBlock();
 		const Block& getLastBlock() const;
 		const blockname& getLastBlockName() const;
 		const std::string& getSource() const;
 
-
-		Block& addName(const blockname& name) noexcept(false);
-		Block& addBlock(const blockname& name) noexcept(false);
-		const_iterator addBlock(const blockname& name, const Block& block) noexcept(false);
+		Block& addName(blockname name) noexcept(false);
+		Block& addBlock(blockname name) noexcept(false);
+		const_iterator addBlock(blockname name, Block block) noexcept(false);
 		const_iterator addBlocks(const std::vector<blockname>& names, const std::vector<Block>& blocks);
-		const_iterator removeBlock(const blockname& name);
-		int getBlockPosition(const dataname& name) const;
-		const_iterator changeBlockPosition(const dataname& name, const size_t newPosn);
+		const_iterator removeBlock(const blockname_view name);
+
+		int getBlockPosition(const blockname_view name) const;
+		const_iterator changeBlockPosition(const blockname_view name, const size_t newPosn);
 		bool overwrite(bool ow);
 		bool canOverwrite() const;
 
 		void print(bool pretty = true) const;
 		std::string to_string(bool pretty=true) const;
+
+		//iterators
+		const_iterator begin() const noexcept;
+		const_iterator end() const noexcept;
+		const_iterator cbegin() const noexcept;
+		const_iterator cend() const noexcept;
+
+		//capacity
+		[[nodiscard]] bool empty() const noexcept;
+		[[nodiscard]] bool isEmpty() const noexcept;
+		size_t size() const noexcept;
+		int size(const blockname_view name) const noexcept;
+		size_t max_size() const noexcept;
+
+		// Modifiers
+		void clear() noexcept;
+		size_t erase(const blockname_view name);
+		const_iterator set(blockname name, Block value);
+		const_iterator put(blockname name, Block value);
+
+		// Lookup
+		const Block& get(const blockname_view name) const;
+		const Block& at(const blockname_view name) const;
+		size_t count(const blockname_view name) const;
+		const_iterator find(const blockname_view name) const;
+		bool contains(const blockname_view name) const;
 
 		//struct Iterator
 		//// taken from https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
@@ -628,7 +661,6 @@ namespace row::cif {
 		//	Cif* cif;
 		//};
 
-
 		struct const_iterator
 		{
 			using iterator_category = std::forward_iterator_tag;
@@ -653,33 +685,6 @@ namespace row::cif {
 			const Cif* cif;
 		};
 
-
-		const_iterator begin() const noexcept;
-		const_iterator end() const noexcept;
-
-		const_iterator cbegin() const noexcept;
-		const_iterator cend() const noexcept;
-
-		//capacity
-		[[nodiscard]] bool empty() const noexcept;
-		[[nodiscard]] bool isEmpty() const noexcept;
-		size_t size() const noexcept;
-		int size(const std::string& name) const noexcept;
-		size_t max_size() const noexcept;
-
-		// Modifiers
-		void clear() noexcept;
-		size_t erase(const blockname& name);
-		const_iterator set(const blockname& name, const Block& value);
-		const_iterator put(const blockname& name, const Block& value);
-
-
-		// Lookup
-		const Block& get(const blockname& name) const;
-		const Block& at(const blockname& name) const;
-		size_t count(const blockname& name) const;
-		const_iterator find(const blockname& name) const;
-		bool contains(const blockname& name) const;
 
 	private:
 		std::pair<const blockname, Block>* ptrToFirstBlock();

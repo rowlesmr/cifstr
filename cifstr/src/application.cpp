@@ -11,6 +11,8 @@
 #include "row/pdqciflib.hpp"
 #include "cifstr.hpp"
 
+
+
 void info() {
 	constexpr std::string_view sv
 	{ "This program is designed to reformat data from CIF into the STR format suitable for use by\n"
@@ -151,7 +153,7 @@ int main(int argc, char* argv[])
         }
         catch (std::runtime_error& e) {
             std::cout << e.what() << '\n';
-            std::cout << "Probable parse error. Continuing with next file...\n";
+            std::cout << "Continuing with next file...\n";
         }   
     }
 
@@ -161,5 +163,4 @@ int main(int argc, char* argv[])
 
 
 }
-
 

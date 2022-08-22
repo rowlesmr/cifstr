@@ -36,9 +36,6 @@
     <ClCompile Include="src\cifstr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Header.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\row\pdqciflib.hpp">
@@ -54,9 +51,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vendor\row\pdqciflib\util.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Header.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
