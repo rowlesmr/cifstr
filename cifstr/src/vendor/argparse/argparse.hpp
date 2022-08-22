@@ -383,7 +383,7 @@ namespace argparse {
         /* parse all parameters and also check for the help_flag which was set in this constructor
          * Upon error, it will print the error and exit immediately.
          */
-        void parse(int argc, const char* const *argv, const bool &raise_on_error) {
+        void parse(int argc, const char* const *argv, const bool &raise_on_error) {            
             if (argc == 1) {
                 help();
                 exit(0);

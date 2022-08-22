@@ -38,9 +38,14 @@ namespace row::util {
 	std::vector<std::string>& toLower_i(std::vector<std::string>& strs);
 	std::vector<std::string> toLower(std::vector<std::string> strs);
 
+	bool icompare(const std::string_view sva, const std::string_view svb);
+
 	template<typename C, typename F>
 	bool contains(const C& c, const F& f);
 
+	template<typename C, typename F>
+	bool icontains(const C& c, const F& f);
+		
 	template <typename T>
 	void makeInRange(T& val, const T& minVal, const T& maxVal);
 
@@ -114,6 +119,20 @@ template<typename C, typename F>
 bool row::util::contains(const C& c, const F& f)
 {
 	return std::find(c.cbegin(), c.cend(), f) != c.cend();
+}
+
+template<typename C, typename F>
+bool row::util::icontains(const C& c, const F& f)
+{
+	auto strincomp = [&f](const std::string_view sv) {
+		return sv.size() == f.size() &&
+		std::equal(sv.begin(), sv.end(), f.begin(),
+			[](unsigned char b, unsigned char a) {
+				return std::tolower(a) == std::tolower(b);
+			}
+		); 
+	};
+	return std::find_if(c.cbegin(), c.cend(), strincomp) != c.cend();
 }
 
 #endif

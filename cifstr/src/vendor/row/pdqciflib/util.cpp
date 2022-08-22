@@ -236,3 +236,13 @@ std::string row::util::replace(std::string s, const char match, const char repla
 	replace_i(s, match, replace);
 	return s;
 }
+
+bool row::util::icompare(const std::string_view sva, const std::string_view svb)
+{
+	if (sva.size() == svb.size()) {
+		return std::equal(svb.begin(), svb.end(), sva.begin(), [](unsigned char b, unsigned char a) { return std::tolower(a) == std::tolower(b); });
+	}
+	else {
+		return false;
+	}
+}

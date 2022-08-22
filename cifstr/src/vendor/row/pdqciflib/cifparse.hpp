@@ -95,7 +95,7 @@ namespace row::cif {
         //item
         struct dataitem : pegtl::sor<pair, loop> {};
 
-        struct blockframecode : pegtl::plus<nonblankchar> {};
+        struct blockframecode : pegtl::star<nonblankchar> {};
 
         //saveframe
         struct saveframeend : SAVE {};
