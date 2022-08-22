@@ -84,16 +84,16 @@ void info() {
 struct MyArgs : public argparse::Args {
     std::vector<std::string>& src_path = arg("input_files", "CIF file(s) you wish to convert.").multi_argument();          
     std::string& dst_path = arg("output_file", "The target STR file. It will be overwritten if it already exists.").set_default("cif1.tmp");      
-    int& verbosity = kwarg("v", "Verbosity of screen output: 0|1|2").set_default(1);
     bool& add_stuff = flag("s,stuff", "Add in the scale factor and other nice stuff to make the STR immediately useable."); 
     bool& do_all_blocks = flag("a,all", "Do all the blocks in all the input_files.");                                       
     bool& write_many_files = flag("m,many", "Output each block as its own STR file. Uses output_file as the basename");     
+    int& verbosity = kwarg("v, verbosity", "Verbosity of screen output: 0|1|2").set_default(1);
     bool& print_info = flag("i,info", "Print information about what the program does.");                                       
 
     bool& printargs = flag("print", "A flag to toggle printing the argument values. Useful for debugging.");
 
     void welcome() override {
-        std::cout << "Welcome to cifstr, a program to convert CIF files to TOPAS STR files." << '\n';
+        std::cout << "Welcome to " << program_name << ", a program to convert CIF files to TOPAS STR files." << '\n';
     }
 };
 
