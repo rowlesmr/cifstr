@@ -269,7 +269,7 @@ namespace argparse {
                 value_ = *default_str_; // for printing
                 datap->set_default(data_default, *default_str_);
             } else if (default_str_.has_value()) {   // in cases where a string is provided to the `set_default` function
-                _convert(default_str_.value());
+				_convert(default_str_.value());
             } else {
                 error = "Argument missing: " + _get_keys() + " (" + help + ")";
             }
@@ -298,11 +298,12 @@ namespace argparse {
     class Args {
     private:
         size_t _arg_idx = 0;
-        std::string program_name;
         std::vector<std::string> params;
         std::vector<std::shared_ptr<Entry>> all_entries;
         std::map<std::string, std::shared_ptr<Entry>> kwarg_entries;
         std::vector<std::shared_ptr<Entry>> arg_entries;
+    protected:
+        std::string program_name;
 
     public:
         virtual ~Args() = default;
@@ -374,6 +375,8 @@ namespace argparse {
                         throw std::runtime_error(entry->error);
                     } else {
                         std::cerr << entry->error << std::endl;
+                        std::cerr << "\nSee help for further information:\n" << std::endl;
+                        help();
                         exit(-1);
                     }
                 }
@@ -384,11 +387,6 @@ namespace argparse {
          * Upon error, it will print the error and exit immediately.
          */
         void parse(int argc, const char* const *argv, const bool &raise_on_error) {            
-            if (argc == 1) {
-                help();
-                exit(0);
-            }
-
             program_name = argv[0];
             params = std::vector<std::string>(argv + 1, argv + argc);
             
@@ -398,32 +396,37 @@ namespace argparse {
                 return params.size() > i && (params[i][0] != '-' || (params[i].size() > 1 && std::isdigit(params[i][1])));  // check for number to not accidentally mark negative numbers as non-parameter
             };
             auto parse_param = [&](size_t &i, const std::string &key, const bool is_short, const std::optional<std::string> &equal_value=std::nullopt) {
-                auto itt = kwarg_entries.find(key);
-                if (itt != kwarg_entries.end()) {
-                    auto &entry = itt->second;
-                    if (equal_value.has_value()) {
-                        entry->_convert(equal_value.value());
-                    } else if (entry->implicit_value_.has_value()) {
-                        entry->_convert(*entry->implicit_value_);
-                    } else if (!is_short) { // short values are not allowed to look ahead for the next parameter
-                        if (is_value(i + 1)) {
-                            std::string value = params[++i];
-                            if (entry->_is_multi_argument) {
-                                while (is_value(i + 1))
-                                    value += "," + params[++i];
-                            }
-                            entry->_convert(value);
-                        } else if (entry->_is_multi_argument) {
-                            entry->_convert("");    // for multiargument parameters, return an empty vector when not passing any more values
-                        } else {
-                            entry->error = "No value provided for: " + key;
-                        }
-                    } else {
-                        entry->error = "No value provided for: " + key;
-                    }
-                } else {
+				auto itt = kwarg_entries.find(key);
+                if (itt == kwarg_entries.end()) {
                     cerr << "unrecognised commandline argument: " << key << endl;
+                    return;
                 }
+				auto& entry = itt->second;
+				if (equal_value.has_value()) {
+					entry->_convert(equal_value.value());
+				}
+				else if (entry->implicit_value_.has_value()) {
+					entry->_convert(*entry->implicit_value_);
+				}
+				else if (!is_short) { // short values are not allowed to look ahead for the next parameter
+					if (is_value(i + 1)) {
+						std::string value = params[++i];
+						if (entry->_is_multi_argument) {
+							while (is_value(i + 1))
+								value += "," + params[++i];
+						}
+						entry->_convert(value);
+					}
+					else if (entry->_is_multi_argument) {
+						entry->_convert("");    // for multiargument parameters, return an empty vector when not passing any more values
+					}
+					else {
+						entry->error = "No value provided for: " + key;
+					}
+				}
+				else {
+					entry->error = "No value provided for: " + key;
+				}
             };
             auto add_param = [&](size_t &i, const size_t &start) {
                 size_t eq_idx = params[i].find('=');  // check if value was passed using the '=' sign
