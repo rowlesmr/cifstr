@@ -25,7 +25,7 @@ row::util::Logger::Logger(Verbosity lev) :verbosity{ lev }
 
 std::string& row::util::toLower_i(std::string& str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+	std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
@@ -77,7 +77,7 @@ std::pair<double, double> row::util::stode(const char* s, const size_t len)
 	}
 	//get the digits before the decimal point
 	while ((c = *s++) != '\0' && std::isdigit(c)) {
-		v = v * 10.0 + (c - '0');
+		v = v * 10.0 + (static_cast<int>(c) - '0');
 		hasDigits = true;
 	}
 	//get the digits after the decimal point
@@ -86,7 +86,7 @@ std::pair<double, double> row::util::stode(const char* s, const size_t len)
 			return std::pair<double, double>({ NaN, 0 });
 		}
 		while ((c = *s++) != '\0' && std::isdigit(c)) {
-			v = v * 10.0 + (c - '0');
+			v = v * 10.0 + (static_cast<int>(c) - '0');
 			p--;
 			hasDigits = true;
 		}
@@ -104,7 +104,7 @@ std::pair<double, double> row::util::stode(const char* s, const size_t len)
 			sign = -1;
 		}
 		while (isdigit(c)) {
-			m = m * 10 + (c - '0');
+			m = m * 10 + (static_cast<int>(c) - '0');
 			c = *s++;
 		}
 		p += sign * m;
@@ -112,7 +112,7 @@ std::pair<double, double> row::util::stode(const char* s, const size_t len)
 	// get the digits that belong to the error
 	if (c == '(' && hasDigits) {
 		while ((c = *s++) != '\0' && std::isdigit(c)) { //implicitly breaks out of loop on the trailing ')'
-			e = e * 10.0 + (c - '0');
+			e = e * 10.0 + (static_cast<int>(c) - '0');
 		}
 		extraChar = 1;
 	}
@@ -148,7 +148,7 @@ std::pair<double, double> row::util::stode(const std::string& s)
 
 std::string& row::util::strip_brackets_i(std::string& s)
 {
-	size_t n{ s.find("(") };
+	size_t n{ s.find('(') };
 	if (n != std::string::npos)
 		s = s.substr(0, n);
 	return s;
@@ -242,7 +242,5 @@ bool row::util::icompare(const std::string_view sva, const std::string_view svb)
 	if (sva.size() == svb.size()) {
 		return std::equal(svb.begin(), svb.end(), sva.begin(), [](unsigned char b, unsigned char a) { return std::tolower(a) == std::tolower(b); });
 	}
-	else {
-		return false;
-	}
+	return false;
 }

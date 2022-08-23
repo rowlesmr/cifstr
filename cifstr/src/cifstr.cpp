@@ -16,7 +16,7 @@ std::string& fix_atom_type_i(std::string& atom)
 		sign = "";
 	}
 
-	if (sign.size() == 1 && charge.size() == 0) { //check for a single sign with no charge. eg F-. Needs to return F-1
+	if (sign.size() == 1 && charge.empty()) { //check for a single sign with no charge. eg F-. Needs to return F-1
 		if (digit.size() == 1)
 			charge = "1";
 		else //the atom was probably the right way around to begin with
@@ -55,11 +55,11 @@ std::string& label_to_atom_i(std::string& label)
 		label = "O";
 		return label;
 	}
-	else if (contains(elements, label.substr(0, 2))) {
+	if (contains(elements, label.substr(0, 2))) {
 		label = label.substr(0, 2);
 		return label;
 	}
-	else if (contains(elements, label.substr(0, 1))) {
+	if (contains(elements, label.substr(0, 1))) {
 		std::string tmp = label.substr(0, 1);
 		if (tmp == "W")
 			logger.log(Logger::Verbosity::SOME, std::format("W detected for site '{0}'. Do you mean oxygen from a water molecule or tungsten? Please check.", label));
@@ -99,8 +99,8 @@ std::string& make_frac_i(std::string& coord, const std::string_view label/*=""*/
 		r = std::format("={0}5/6;", m4.get<1>().to_string());
 	}
 
-	if (r.size() != 0) {
-		if (label.size() == 0) {
+	if (!r.empty()) {
+		if (label.empty()) {
 			logger.log(Logger::Verbosity::ALL, std::format("Atomic site coordinate '{0}' replaced by '{1}'.", coord, r));
 		}
 		else {
@@ -108,7 +108,6 @@ std::string& make_frac_i(std::string& coord, const std::string_view label/*=""*/
 		}
 		coord = r;
 	}
-
 	return coord;
 }
 
@@ -291,11 +290,9 @@ CrystalSystem UnitCell::deduce_symmetry() const
 		if (util::are_equal(al, 90.0)) {
 			return CrystalSystem::Cubic;
 		}
-		else {
-			return CrystalSystem::Rhombohedral;
-		}
+		return CrystalSystem::Rhombohedral;
 	}
-	else if (util::all_equal({ a,b }) && util::all_equal({ al,be,90.0 })) {
+	if (util::all_equal({ a,b }) && util::all_equal({ al,be,90.0 })) {
 		if (util::are_equal(ga, 90.0)) {
 			return CrystalSystem::Tetragonal;
 		}
@@ -310,10 +307,10 @@ CrystalSystem UnitCell::deduce_symmetry() const
 	if (util::all_equal({ al,ga,90.0 }) && !util::all_equal({ be,90.0 })) {
 		return CrystalSystem::Monoclinic_be;
 	}
-	else if (util::all_equal({ al,be,90.0 }) && !util::all_equal({ ga,90.0 })) {
+	if (util::all_equal({ al,be,90.0 }) && !util::all_equal({ ga,90.0 })) {
 		return CrystalSystem::Monoclinic_ga;
 	}
-	else if (util::all_equal({ ga,be,90.0 }) && !util::all_equal({ al,90.0 })) {
+	if (util::all_equal({ ga,be,90.0 }) && !util::all_equal({ al,90.0 })) {
 		return CrystalSystem::Monoclinic_al;
 	}
 	return CrystalSystem::Triclinic;
@@ -322,7 +319,6 @@ CrystalSystem UnitCell::deduce_symmetry() const
 Site::Site(std::string t_label, std::string t_x, std::string t_y, std::string t_z, std::string t_atom, std::string t_occ, std::string t_beq) : label{ std::move(t_label) }, x{ std::move(t_x) }, y{ std::move(t_y) }, z{ std::move(t_z) },
 atom{ std::move(t_atom) }, occ{ std::move(t_occ) }, beq{ std::move(t_beq) }
 {
-
 	std::replace(label.begin(), label.end(), '\'', 'p'); //can't contain a "'", as this is a comment character in TOPAS
 }
 
@@ -339,7 +335,6 @@ Sites::Sites(const row::cif::Block& block)
 	std::vector<std::string> ys{ block.getValue("_atom_site_fract_y").getStrings() };
 	std::vector<std::string> zs{ block.getValue("_atom_site_fract_z").getStrings() };
 
-
 	pad_column_i(strip_brackets_i(make_frac_i(xs, labels)));
 	pad_column_i(strip_brackets_i(make_frac_i(ys, labels)));
 	pad_column_i(strip_brackets_i(make_frac_i(zs, labels)));
@@ -348,7 +343,6 @@ Sites::Sites(const row::cif::Block& block)
 	std::vector<std::string> atoms{ get_atoms(block) };
 	std::vector<std::string> occs{ get_occs(block) };
 	std::vector<std::string> beqs{ get_Beqs(block) };
-
 
 	m_sites.reserve(labels.size());
 	for (size_t i{ 0 }; i < labels.size(); ++i) {
@@ -536,32 +530,29 @@ std::unordered_map<std::string, std::string> Sites::make_beq_dict(const row::cif
 
 std::vector<std::string> Sites::get_atoms(const row::cif::Block& block)
 {
-	std::vector<std::string> atoms{};
-	atoms.reserve(block.getValue("_atom_site_label").size());
-
-	if (block.contains("_atom_site_type_symbol")) {
-		atoms = fix_atom_types(block.getValue("_atom_site_type_symbol").getStrings());
-	}
-	else {
+	auto initialiser = [&] {
+		if (block.contains("_atom_site_type_symbol")) {
+			return fix_atom_types(block.getValue("_atom_site_type_symbol").getStrings());
+		}
 		logger.log(Logger::Verbosity::SOME, "Atom types inferred from site labels. Please check for correctness.");
-		atoms = labels_to_atoms(block.getValue("_atom_site_label").getStrings());
-	}
+		return labels_to_atoms(block.getValue("_atom_site_label").getStrings());
+	};
 
+	std::vector<std::string> atoms{ initialiser() };
 	return pad_column_i(atoms);
 }
 
 std::vector<std::string> Sites::get_occs(const row::cif::Block& block)
 {
-	std::vector<std::string> occs{};
-	occs.reserve(block.getValue("_atom_site_label").size());
-
-	if (block.contains("_atom_site_occupancy")) {
-		occs = block.getValue("_atom_site_occupancy").getStrings();
-	}
-	else {
+	auto initialiser = [&] {
+		if (block.contains("_atom_site_occupancy")) {
+			return block.getValue("_atom_site_occupancy").getStrings();
+		}
 		logger.log(Logger::Verbosity::SOME, "No occupancies found. All set to 1.");
-		occs = std::vector<std::string>(block.getValue("_atom_site_label").size(), std::string{ "1." });
-	}
+		return std::vector<std::string>(block.getValue("_atom_site_label").size(), std::string{ "1." });
+	};
+
+	std::vector<std::string> occs{ initialiser() };
 	return pad_column_i(strip_brackets_i(occs));
 }
 
@@ -602,7 +593,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(
 		}
 		if (!found) {
 			logger.log(Logger::Verbosity::SOME, std::format("beq value missing or zero for site {0}! Default value of '1.' entered.", label));
-			beqs.push_back("1.");
+			beqs.emplace_back("1.");
 		}
 	}
 	return pad_column_i(beqs);
@@ -659,20 +650,23 @@ bool CrystalStructure::check_block(const row::cif::Block& block, int verbosity) 
 {
 	logger.verbosity = static_cast<Logger::Verbosity>(verbosity);
 	if (std::all_of(must_have_tags.cbegin(), must_have_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }) &&
-		std::any_of(space_group_tags.cbegin(), space_group_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); }))
+		std::any_of(space_group_tags.cbegin(), space_group_tags.cend(), [&block](const std::string& tag) { return block.contains(tag); })) {
 		return true;
-	else
-		throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block_name));
+	}
+	throw std::out_of_range(std::format("Block \"{0}\" doesn't contain sufficient information to make a structure.", block_name));
 }
 
 std::string CrystalStructure::make_phase_name(const row::cif::Block& block) const
 {
-	std::string name{};
-	auto it = std::find_if(phase_name_tags.begin(), phase_name_tags.end(), [&block](const std::string& tag) {return block.contains(tag); });
-	if (it != phase_name_tags.end()) {
-		name = block.getValue(*it).getStrings()[0];
-	}
+	auto initialiser = [&] {
+		auto it = std::find_if(phase_name_tags.begin(), phase_name_tags.end(), [&block](const std::string& tag){ return block.contains(tag); });
+		if (it != phase_name_tags.end()) {
+			return block.getValue(*it).getStrings()[0];
+		}
+		return std::string{ "" };
+	};
 
+	std::string name{ initialiser() };
 	replace_i(name, '\'', ' ');
 	replace_i(name, '\"', ' ');
 	trim_i(name);
@@ -684,11 +678,15 @@ std::string CrystalStructure::make_phase_name(const row::cif::Block& block) cons
 
 std::string CrystalStructure::make_space_group(const row::cif::Block& block) const
 {
-	std::string sg{};
-	auto it = std::find_if(space_group_tags.begin(), space_group_tags.end(), [&block](const std::string& tag) {return block.contains(tag); });
-	if (it != space_group_tags.end()) {
-		sg = block.getValue(*it).getStrings()[0];
-	}
+	auto initialiser = [&] {
+		auto it = std::find_if(space_group_tags.begin(), space_group_tags.end(), [&block](const std::string& tag) {return block.contains(tag); });
+		if (it != space_group_tags.end()) {
+			return block.getValue(*it).getStrings()[0];
+		}
+		return std::string{ "" };
+	};
+
+	std::string sg{ initialiser() };
 
 	if (std::all_of(sg.begin(), sg.end(), [](const char& c) { return std::isdigit(c) != 0; })) {
 		logger.log(Logger::Verbosity::SOME, "Space group given by number. Check that the SG setting matches that of the atom coordinates.");

@@ -21,10 +21,10 @@
     <ClCompile Include="src\cifstr.hpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vendor\row\pdqciflib\cifexcept.cpp">
+    <ClCompile Include="src\cifstr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vendor\row\pdqciflib\util.cpp">
+    <ClCompile Include="src\vendor\row\pdqciflib\cifexcept.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vendor\row\pdqciflib\ciffile.cpp">
@@ -33,14 +33,11 @@
     <ClCompile Include="src\vendor\row\pdqciflib\cifparse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cifstr.cpp">
+    <ClCompile Include="src\vendor\row\pdqciflib\util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\vendor\row\pdqciflib.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\vendor\row\pdqciflib\cifexcept.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -51,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vendor\row\pdqciflib\util.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\row\pdqciflib.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

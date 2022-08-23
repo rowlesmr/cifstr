@@ -11,6 +11,7 @@
 #include <format>
 #include <array>
 #include <string_view>
+#include <cctype>
 
 
 namespace row::util {
@@ -91,7 +92,7 @@ int row::util::getIndexOf(const std::vector<T>& v, const T& f)
 	if (it == v.cend()) {
 		return -1;
 	}
-	return static_cast<int>(it - v.cbegin());
+	return static_cast<int>(std::distance(v.cbegin(), it));
 }
 
 template <typename T>

@@ -39,6 +39,8 @@
 #include <type_traits>         // for declval, false_type, true_type, is_enum
 #include <utility>             // for move, pair
 #include <vector>              // for vector
+#include <filesystem>          // for path
+
 
 #if __has_include("magic_enum.hpp")
 #include <magic_enum.hpp>      // for enum_entries
@@ -277,19 +279,19 @@ namespace argparse {
 
         [[nodiscard]] std::string info() const {
             return "";
-            const std::string allowed_entries = datap->get_allowed_entries();
-            const std::string default_value = default_str_.has_value() ? "default: " + *default_str_ : "";
+            //const std::string allowed_entries = datap->get_allowed_entries();
+            ////const std::string default_value = default_str_.has_value() ? "default: " + *default_str_ : "";
             //const std::string default_value = default_str_.has_value() ? "default: " + *default_str_ : "required";
-            const std::string implicit_value = implicit_value_.has_value() ? "implicit: \"" + *implicit_value_ + "\", ": "";
-            const std::string allowed_value = !allowed_entries.empty()? "allowed: <" + allowed_entries.substr(0, allowed_entries.size()-2) + ">, ": "";
-            const std::string info = allowed_value + implicit_value + default_value;
+            //const std::string implicit_value = implicit_value_.has_value() ? "implicit: \"" + *implicit_value_ + "\", ": "";
+            //const std::string allowed_value = !allowed_entries.empty()? "allowed: <" + allowed_entries.substr(0, allowed_entries.size()-2) + ">, ": "";
+            //const std::string info = allowed_value + implicit_value + default_value;
 
-            if (info.size() == 0) {
-                return "";
-            }
-            else {
-                return " [" + info + "]";
-            }
+            //if (info.size() == 0) {
+            //    return "";
+            //}
+            //else {
+            //    return " [" + info + "]";
+            //}
         }
 
         friend class Args;
@@ -386,8 +388,8 @@ namespace argparse {
         /* parse all parameters and also check for the help_flag which was set in this constructor
          * Upon error, it will print the error and exit immediately.
          */
-        void parse(int argc, const char* const *argv, const bool &raise_on_error) {            
-            program_name = argv[0];
+        void parse(int argc, const char* const *argv, const bool &raise_on_error) {            	
+            program_name = std::filesystem::path(argv[0]).stem().string();
             params = std::vector<std::string>(argv + 1, argv + argc);
             
             bool& _help = flag("help", "print help");

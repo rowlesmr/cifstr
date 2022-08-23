@@ -86,7 +86,7 @@ row::cif::Datavalue::Datavalue(std::vector<std::string>&& in) : m_strs(std::move
 
 }
 
-row::cif::Datavalue::Datavalue(std::initializer_list<std::string> in) : m_strs{ std::move(in) }
+row::cif::Datavalue::Datavalue(std::initializer_list<std::string> in) : m_strs{ in }
 {
 
 }
@@ -101,7 +101,7 @@ bool row::cif::Datavalue::convert() const
 	// a fully validating parser would test every one, as well
 	// as knowing if the tag associated with the values could
 	// be numeric, or a list, etc...
-	if (m_strs.size()) {
+	if (!m_strs.empty()) {
 		auto [val, err] = row::util::stode(m_strs[0]);
 		if (val == row::util::NaN && err == row::util::NaN) {
 			m_isConverted = false;
@@ -575,12 +575,12 @@ row::cif::Block::const_iterator row::cif::Block::addItem(dataname tag, Datavalue
 	}
 
 	if (!contains(tag) && !isInLoop(tag)) {
-		m_item_order.push_back(tag);
+		m_item_order.emplace_back(tag);
 	}
 
 	const auto& [it, _] = m_block.insert({ std::move(tag), std::move(value) });
 	// need to convert the iterator to one of mine
-	return const_iterator(&(*it), this);
+	return {&(*it), this};
 }
 
 row::cif::Block::const_iterator row::cif::Block::addItems(const std::vector<dataname>& tags, const std::vector<Datavalue>& values) noexcept(false)
@@ -634,14 +634,14 @@ row::cif::Block::const_iterator row::cif::Block::createLoop(std::vector<dataname
 
 	//remove empty loops
 	for (auto& [loopNum, loopTags] : m_loops) {
-		if (loopTags.size() == 0) {
+		if (loopTags.empty()) {
 			m_loops.erase(loopNum);
 		}
 	}
 
 	//get the loop number to use for the loop we're about to insert
 	int loopNum{ 1 };
-	if (m_loops.size() > 0) {
+	if (!m_loops.empty()) {
 		for (auto& [k, v] : m_loops) {
 			if (k >= loopNum)
 				loopNum = k + 1;
@@ -716,13 +716,23 @@ row::cif::Block::const_iterator row::cif::Block::removeItem(const dataname_view 
 	if (loopNum > 0) {
 		std::erase(m_loops[loopNum], tag);
 
-		if (m_loops[loopNum].size() == 0) {
+		if (m_loops[loopNum].empty()) {
 			m_loops.erase(loopNum);
-			std::erase_if(m_item_order, [loopNum](const auto& thing) { if (thing.index() == 0) { return std::get<int>(thing) == loopNum; } else { return false; }});
+			std::erase_if(m_item_order, [loopNum](const auto& thing) { 
+				if (thing.index() == 0) { 
+					return std::get<int>(thing) == loopNum; 
+				} 
+				return false;
+			});
 		}
 	}
 	else {
-		std::erase_if(m_item_order, [tag](const auto& thing) { if (thing.index() == 1) { return row::util::icompare(std::get<dataname>(thing), tag); } else { return false; }});
+		std::erase_if(m_item_order, [tag](const auto& thing) { 
+			if (thing.index() == 1) { 
+				return row::util::icompare(std::get<dataname>(thing), tag); 
+			} 
+			return false;
+		});
 	}
 	return returnMe;
 }
@@ -798,14 +808,12 @@ std::tuple<int, int> row::cif::Block::getItemPosition(const dataname_view tag) c
 
 
 	if (it != m_item_order.end()) {
-		return std::tuple<int, int> {-1, std::distance(m_item_order.cbegin(), it)};
+		return std::tuple<int, int> { -1, static_cast<int>(std::distance(m_item_order.cbegin(), it)) };
 	}
-	else {
-		int loopNum{ getLoopNum(tag) };
-		auto itt{ std::find(m_loops.at(loopNum).cbegin(), m_loops.at(loopNum).cend(), tag) };
-		int loopPos{ static_cast<int>(std::distance(m_loops.at(loopNum).cbegin(), itt)) };
-		return std::tuple<int, int> {loopNum, loopPos};
-	}
+	int loopNum{ getLoopNum(tag) };
+	auto itt{ std::find(m_loops.at(loopNum).cbegin(), m_loops.at(loopNum).cend(), tag) };
+	int loopPos{ static_cast<int>(std::distance(m_loops.at(loopNum).cbegin(), itt)) };
+	return std::tuple<int, int> {loopNum, loopPos};
 }
 
 row::cif::Block::const_iterator row::cif::Block::changeItemPosition(const dataname_view tag, const size_t newPosn)
@@ -968,22 +976,22 @@ std::string row::cif::Block::to_string(bool pretty/*=true*/) const
 //Iterators
 row::cif::Block::const_iterator row::cif::Block::begin() const noexcept
 {
-	return const_iterator(constptrToFirstItem(), this);
+	return {constptrToFirstItem(), this};
 }
 
 row::cif::Block::const_iterator row::cif::Block::end() const noexcept
 {
-	return const_iterator(nullptr, this);
+	return {nullptr, this};
 }
 
 row::cif::Block::const_iterator row::cif::Block::cbegin() const noexcept
 {
-	return const_iterator(constptrToFirstItem(), this);
+	return {constptrToFirstItem(), this};
 }
 
 row::cif::Block::const_iterator row::cif::Block::cend() const noexcept
 {
-	return const_iterator(nullptr, this);
+	return {nullptr, this};
 }
 
 
@@ -1031,8 +1039,7 @@ size_t row::cif::Block::erase(const dataname_view tag)
 	const_iterator r = removeItem(tag);
 	if (r == cend())
 		return 0;
-	else
-		return 1;
+	return 1;
 }
 
 
@@ -1054,7 +1061,7 @@ row::cif::Block::const_iterator row::cif::Block::find(const dataname_view tag) c
 		return cend();
 	}
 
-	return const_iterator(&(*it), this);
+	return {&(*it), this};
 }
 
 bool row::cif::Block::contains(const dataname_view tag) const
@@ -1357,19 +1364,14 @@ of `name`.  An item has coordinate `(loop_no,pos)` with
 the top level having a `loop_no` of -1.
 Return -1, -1, indicates doesn't exist.
 */
-
 	const auto it = std::find_if(m_block_order.cbegin(), m_block_order.cend(), [name](auto& block) {
 			return row::util::icompare(name, block);
 		});
 
-
 	if (it != m_block_order.end()) {
 		return static_cast<int>(std::distance(m_block_order.cbegin(), it));
 	}
-	else {
-		return -1;
-	}
-
+	return -1;
 }
 
 row::cif::Cif::const_iterator row::cif::Cif::changeBlockPosition(const blockname_view name, const size_t newPosn)
@@ -1423,22 +1425,22 @@ std::string row::cif::Cif::to_string(bool pretty/*=true*/) const
 //iterators
 row::cif::Cif::const_iterator row::cif::Cif::begin() const noexcept
 {
-	return const_iterator(constptrToFirstBlock(), this);
+	return {constptrToFirstBlock(), this};
 }
 
 row::cif::Cif::const_iterator row::cif::Cif::end() const noexcept
 {
-	return const_iterator(nullptr, this);
+	return {nullptr, this};
 }
 
 row::cif::Cif::const_iterator row::cif::Cif::cbegin() const noexcept
 {
-	return const_iterator(constptrToFirstBlock(), this);
+	return {constptrToFirstBlock(), this};
 }
 
 row::cif::Cif::const_iterator row::cif::Cif::cend() const noexcept
 {
-	return const_iterator(nullptr, this);
+	return {nullptr, this};
 }
 
 
@@ -1483,8 +1485,10 @@ void row::cif::Cif::clear() noexcept
 size_t row::cif::Cif::erase(const blockname_view name)
 {
 	const_iterator r{ removeBlock(name) };
-	if (r != cend()) { return 1; }
-	else { return 0; }
+	if (r != cend()) { 
+		return 1; 
+	}
+	return 0;
 }
 
 row::cif::Cif::const_iterator row::cif::Cif::set(blockname name, Block value)
@@ -1520,7 +1524,7 @@ size_t row::cif::Cif::count(const blockname_view name) const
 row::cif::Cif::const_iterator row::cif::Cif::find(const blockname_view name) const
 {
 	const std::pair<const blockname, Block>* m_ptr = &(*m_cif.find(name));
-	return const_iterator(m_ptr, this);
+	return {m_ptr, this};
 }
 
 bool row::cif::Cif::contains(const blockname_view name) const

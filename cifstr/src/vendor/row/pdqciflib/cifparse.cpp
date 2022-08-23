@@ -57,20 +57,20 @@ void row::cif::Buffer::appendTag(std::string in_tag)
 
 void row::cif::Buffer::initialiseValues()
 {
-	if (values.size() == 0) {
+	if (values.empty()) {
 		maxLoop = tags.size();
 		values = std::vector<Datavalue>(maxLoop);
 	}
 }
 
-row::cif::Cif row::cif::read_file(const std::string& filename, bool overwrite /*= false*/) noexcept(false)
+row::cif::Cif row::cif::read_file(const std::string& filename, bool overwrite /*= false*/, bool printErr /*= true*/) noexcept(false)
 {
 	pegtl::file_input in(filename);
-	return read_input(in, overwrite);
+	return read_input(in, overwrite, printErr);
 }
 
-row::cif::Cif row::cif::read_string(const std::string& cifstring, bool overwrite /*= false*/, const std::string& source /*= "string"*/) noexcept(false)
+row::cif::Cif row::cif::read_string(const std::string& cifstring, bool overwrite /*= false*/, bool printErr /*= true*/, const std::string& source /*= "string"*/) noexcept(false)
 {
 	pegtl::string_input in(cifstring, source);
-	return read_input(in, overwrite);
+	return read_input(in, overwrite, printErr);
 }

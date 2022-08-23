@@ -15,9 +15,6 @@ namespace row::cif {
     namespace pegtl = tao::pegtl;
 
     namespace rules {
-
-        //#define DEBUG_RULES
-
         //reserved words
         struct DATA : TAO_PEGTL_ISTRING("data_") {};
         struct LOOP : TAO_PEGTL_ISTRING("loop_") {};
@@ -238,7 +235,7 @@ namespace row::cif {
         template<typename Input> static void apply(const Input& in, Cif& out, Status& status, Buffer& buffer) {
             Block& block = out.getLastBlock();           
             try {
-                block.addItemsAsLoop(std::move(buffer.tags), std::move(buffer.values));
+                block.addItemsAsLoop(buffer.tags, buffer.values);
             }
             catch (const tag_already_exists_error&) {
                 throw pegtl::parse_error("Tag in loop already exists", in);
@@ -273,7 +270,7 @@ namespace row::cif {
         
 
     template<typename Input> 
-    void parse_input(Cif& d, Input&& in) noexcept(false) {
+    void parse_input(Cif& d, Input&& in, bool printErr = true) noexcept(false) {
         try {
             Status status{};
             Buffer buffer{};
@@ -282,26 +279,28 @@ namespace row::cif {
         catch (pegtl::parse_error& e) {
             const auto p = e.positions().front();
             //pretty-print the error msg and the line that caused it, with an indicator at the token that done it.
-            std::cout << e.what() << '\n'
-                << in.line_at(p) << '\n'
-                << std::setw(p.column) << '^' << std::endl;
+            if (printErr) {
+                std::cerr << e.what() << '\n'
+                    << in.line_at(p) << '\n'
+                    << std::setw(p.column) << '^' << std::endl;
+            }
             throw std::runtime_error("Parsing error.");
         }
     }
 
     template<typename Input> 
-    Cif read_input(Input&& in, bool overwrite = false)  noexcept(false) {
+    Cif read_input(Input&& in, bool overwrite = false, bool printErr = true)  noexcept(false) {
         Cif cif{ in.source() };
         cif.overwrite(overwrite);
-        parse_input(cif, in);
+        parse_input(cif, in, printErr);
         return cif;
     }
 
     //read in a file into a Cif. Will throw std::runtime_error if it encounters problems
-    Cif read_file(const std::string& filename, bool overwrite = false) noexcept(false);
+    Cif read_file(const std::string& filename, bool overwrite = false, bool printErr = true) noexcept(false);
 
     //read a string into a Cif. Will throw std::runtime_error if it encounters problems
-    Cif read_string(const std::string& cifstring, bool overwrite = false, const std::string& source = "string") noexcept(false);
+    Cif read_string(const std::string& cifstring, bool overwrite = false, bool printErr = true, const std::string& source = "string") noexcept(false);
 
 }
 #endif // !ROW_CIFPARSE_HPP

@@ -83,11 +83,11 @@ void info() {
 
 struct MyArgs : public argparse::Args {
     std::vector<std::string>& src_path = arg("input_files", "CIF file(s) you wish to convert.").multi_argument();          
-    std::string& dst_path = arg("output_file", "The target STR file. It will be overwritten if it already exists.").set_default("cif1.tmp");      
+    std::string& dst_path = arg("output_file", "The target STR file. It will be overwritten if it already exists.");      
     bool& add_stuff = flag("s,stuff", "Add in the scale factor and other nice stuff to make the STR immediately useable."); 
     bool& do_all_blocks = flag("a,all", "Do all the blocks in all the input_files.");                                       
     bool& write_many_files = flag("m,many", "Output each block as its own STR file. Uses output_file as the basename");     
-    int& verbosity = kwarg("v, verbosity", "Verbosity of screen output: 0|1|2").set_default(1);
+    int& verbosity = kwarg("v,verbosity", "Verbosity of screen output: 0|1|2").set_default(1);
     bool& print_info = flag("i,info", "Print information about what the program does.");                                       
 
     bool& printargs = flag("print", "A flag to toggle printing the argument values. Useful for debugging.");
@@ -104,10 +104,13 @@ void print_block_to_file(const std::string& name, const std::string& source, con
         out << str.to_string() << '\n';
     }
     catch (std::exception& e) {
-        std::cout << e.what() << '\n';
-        std::cout << "Continuing...\n";
+		if (verbosity > 0) {
+			std::cerr << e.what() << '\n';
+			std::cerr << "Continuing...\n";
+		}
     }
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -133,7 +136,7 @@ int main(int argc, char* argv[])
             if (args.verbosity > 0) {
                 std::cout << std::format("--------------------\nNow reading {0}. Block(s):\n", file);
             }
-            row::cif::Cif cif = row::cif::read_file(file);
+            row::cif::Cif cif = row::cif::read_file(file, false, args.verbosity > 0);
             if (args.do_all_blocks) {
                 for (const auto& [name, block] : cif) {
                     if (args.write_many_files) {
@@ -152,8 +155,10 @@ int main(int argc, char* argv[])
             }
         }
         catch (std::runtime_error& e) {
-            std::cout << e.what() << '\n';
-            std::cout << "Continuing with next file...\n";
+			if (args.verbosity > 0) {
+				std::cerr << e.what() << '\n';
+				std::cerr << "Continuing with next file...\n";
+			}
         }   
     }
 
