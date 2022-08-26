@@ -116,11 +116,30 @@ namespace row::cif {
         bool is_quote{ false };
         bool is_printed{ false };
 
-        void reset();
-        void get_ready_to_print();
-        void just_printed();
-        void finished_printing();
-        void loop();
+		void reset() {
+			is_loop = false;
+			is_quote = false;
+			is_printed = false;
+		}
+
+		void get_ready_to_print() {
+			is_quote = true;
+			is_printed = false;
+		}
+
+		void just_printed() {
+			is_printed = true;
+		}
+
+		void finished_printing() {
+			is_quote = false;
+			is_printed = false;
+		}
+
+		void loop() {
+			is_loop = !is_loop;
+		}
+
     };
 
 
@@ -135,12 +154,33 @@ namespace row::cif {
         size_t totalValues{};
         size_t tagNum{};
 
-        void initialiseValues();
+		void initialiseValues() {
+			if (values.empty()) {
+				maxLoop = tags.size();
+				values = std::vector<Datavalue>(maxLoop);
+			}
+		}
 
-        void appendTag(std::string in_tag);
-        void appendValue(std::string val);
+		void appendTag(std::string in_tag) {
+			tags.push_back(std::move(in_tag));
+			++tagNum;
+		}
 
-        void clear();
+		void appendValue(std::string val) {
+			values[loopNum].push_back(std::move(val));
+			loopNum = ++loopNum % maxLoop;
+			++totalValues;
+		}
+
+		void clear() {
+			tag.clear();
+			tags.clear();
+			values.clear();
+			loopNum = 0;
+			maxLoop = 0;
+			totalValues = 0;
+			tagNum = 0;
+		}
     };
 
 
@@ -297,10 +337,16 @@ namespace row::cif {
     }
 
     //read in a file into a Cif. Will throw std::runtime_error if it encounters problems
-    Cif read_file(const std::string& filename, bool overwrite = false, bool printErr = true) noexcept(false);
+    inline Cif read_file(const std::string& filename, bool overwrite = false, bool printErr = true) noexcept(false) {
+		pegtl::file_input in(filename);
+		return read_input(in, overwrite, printErr);
+	}
 
     //read a string into a Cif. Will throw std::runtime_error if it encounters problems
-    Cif read_string(const std::string& cifstring, bool overwrite = false, bool printErr = true, const std::string& source = "string") noexcept(false);
+    inline Cif read_string(const std::string& cifstring, bool overwrite = false, bool printErr = true, const std::string& source = "string") noexcept(false) {
+		pegtl::string_input in(cifstring, source);
+		return read_input(in, overwrite, printErr);
+	}
 
 }
 #endif // !ROW_CIFPARSE_HPP
