@@ -22,17 +22,6 @@
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\cifstr.cpp" />
     <ClCompile Include="src\cifstr.hpp" />
-    <ClCompile Include="src\vendor\row\pdqciflib\cifexcept.cpp" />
-    <ClCompile Include="src\vendor\row\pdqciflib\ciffile.cpp" />
-    <ClCompile Include="src\vendor\row\pdqciflib\cifparse.cpp" />
-    <ClCompile Include="src\vendor\row\pdqciflib\util.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\vendor\row\pdqciflib.hpp" />
-    <ClInclude Include="src\vendor\row\pdqciflib\cifexcept.hpp" />
-    <ClInclude Include="src\vendor\row\pdqciflib\ciffile.hpp" />
-    <ClInclude Include="src\vendor\row\pdqciflib\cifparse.hpp" />
-    <ClInclude Include="src\vendor\row\pdqciflib\util.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
