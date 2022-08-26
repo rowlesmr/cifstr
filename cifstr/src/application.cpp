@@ -79,6 +79,7 @@ void info() {
 	"rowlesmr@gmail.com\n" };
 
 	std::cout << sv;
+	return;
 }
 
 struct MyArgs : public argparse::Args {
@@ -109,6 +110,7 @@ void print_block_to_file(const std::string& name, const std::string& source, con
 			std::cerr << "Continuing...\n";
 		}
     }
+	return;
 }
 
 

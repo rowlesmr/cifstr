@@ -528,6 +528,7 @@ void row::cif::Block::print_item_order() const
 		}
 	}
 	std::cout << "\n---\n";
+	return;
 }
 
 void row::cif::Block::print_loops() const
@@ -541,6 +542,7 @@ void row::cif::Block::print_loops() const
 		std::cout << '\n';
 	}
 	std::cout << "---\n";
+	return;
 }
 
 void row::cif::Block::print_block() const
@@ -554,6 +556,7 @@ void row::cif::Block::print_block() const
 		std::cout << '\n';
 	}
 	std::cout << "---\n";
+	return;
 }
 
 
@@ -918,6 +921,7 @@ std::string row::cif::Block::formatValue(std::string value) const
 void row::cif::Block::print(bool pretty /*= true*/) const
 {
 	std::cout << to_string(pretty);
+	return;
 }
 
 std::string row::cif::Block::to_string(bool pretty/*=true*/) const
@@ -1032,6 +1036,7 @@ void row::cif::Block::clear() noexcept
 	m_loops.clear();
 	m_item_order.clear();
 	overwrite = true;
+	return;
 }
 
 size_t row::cif::Block::erase(const dataname_view tag)
@@ -1260,6 +1265,7 @@ void row::cif::Cif::print_block_order() const
 		std::cout << block << '\n';
 	}
 	std::cout << "---\n";
+	return;
 }
 
 void row::cif::Cif::print_cif() const
@@ -1269,6 +1275,7 @@ void row::cif::Cif::print_cif() const
 		std::cout << k << '\n';
 	}
 	std::cout << "---\n";
+	return;
 }
 
 
@@ -1409,6 +1416,7 @@ bool row::cif::Cif::canOverwrite() const
 void row::cif::Cif::print(bool pretty /*= true*/) const
 {
 	std::cout << to_string(pretty);
+	return;
 }
 
 std::string row::cif::Cif::to_string(bool pretty/*=true*/) const
@@ -1480,6 +1488,7 @@ void row::cif::Cif::clear() noexcept
 	m_cif.clear();
 	m_block_order.clear();
 	m_overwrite = false;
+	return;
 }
 
 size_t row::cif::Cif::erase(const blockname_view name)

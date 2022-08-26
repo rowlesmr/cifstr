@@ -12,6 +12,7 @@
 #include <array>
 #include <string_view>
 #include <cctype>
+#include <utility>
 
 
 namespace row::util {
@@ -61,8 +62,48 @@ namespace row::util {
 	constexpr double deg{ std::numbers::pi / 180.0 };
 	constexpr double rad{ 1.0 / deg };
 
-	std::pair<double, double> stode(const char* s, const size_t len);
+
+
+	//std::pair<double, double> row::util::stode(const char* first, const char* last);
+	template <typename T>
+	struct span {
+		const T* ptr;
+		size_t length;
+		span(const T* _ptr, size_t _length) : ptr(_ptr), length(_length) {}
+		span() : ptr(nullptr), length(0) {}
+
+		constexpr size_t len() const noexcept {
+			return length;
+		}
+
+		const T& operator[](size_t index) const noexcept {
+			//FASTFLOAT_DEBUG_ASSERT(index < length);
+			return ptr[index];
+		}
+	};
+
+	typedef span<const char> byte_span;
+	
+	struct parsed_number_string {
+		int64_t exponent{ 0 };
+		uint64_t mantissa{ 0 };
+		uint64_t error_mantissa{ 0 };
+		const char* lastmatch{ nullptr };
+		bool negative{ false };
+		bool valid{ false };
+		bool too_many_digits{ false };
+		// contains the range of the significant digits
+		byte_span integer{};  // non-nullable
+		byte_span fraction{}; // nullable
+		byte_span errint{};
+	};
+
+	
+	bool is_integer(char c) noexcept;
+	parsed_number_string parse_number_string(const char* p, const char* pend);
+	std::pair<double, double> stode(const char* p, const char* pend);
 	std::pair<double, double> stode(const std::string& s);
+	std::pair<double, double> stode(const std::string_view s);
 
 	std::string& strip_brackets_i(std::string& s);
 	std::string strip_brackets(std::string s);

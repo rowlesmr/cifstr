@@ -49,103 +49,115 @@ std::vector<std::string> row::util::toLower(std::vector<std::string> strs)
 	return strs;
 }
 
-std::pair<double, double> row::util::stode(const char* s, const size_t len)
-{
-	double v{ 0.0 }; //value
-	double e{ 0.0 }; //the error in the value
 
-	int sgn{ 1 }; // what is sign of the double?
-	int p{ 0 }; // what is the effective power for the value and error terms?
-	char c{ *s };
+
+
+auto initialise_pow10_lookup = [] {
+	const int max_pow_10{ 309 };
+	std::array<double, max_pow_10> pows{};
+	pows[0] = 1;
+	for (int i{ 1 }; i < max_pow_10; ++i) {
+		pows[i] = pows[i - 1] * 10.0;
+	}
+	return pows;
+};
+
+static constexpr std::array pow_10{ initialise_pow10_lookup() };
+
+
+
+std::pair<double, double> row::util::stode(const char* p, const char* pend) //inclusive begin, exclusive end
+{
+	if ((*p == '?' || *p == '.') && pend - p == 1) {
+		return std::make_pair(NaN, 0);
+	}
+
+	uint64_t vi{ 0 }; //value
+	uint64_t ei{ 0 }; //the error in the value
+	bool isNeg{ *p == '-' };
+	int64_t exponent{ 0 }; // what is the effective power for the value and error terms?
+
 	bool hasDigits{ false };
 
-	//this is the address of the start of the const char*. I need it as a long, so I can
-	// do the same when I get to the end. If the difference is the length of the string, 
-	// then I know I've converted the entire string, and it is valid.
-	// I need to cast to void* to get around interpreting the char* as a string. I then reinterpret 
-	// the address as a long, so I can do maths with it.
-	unsigned long long beginning{ reinterpret_cast<unsigned long long>(static_cast<const void*>(s)) };
-	size_t extraChar{ 0 };
-
 	//get the sign of the double
-	if (c == '-') {
-		sgn = -1;
-		++s;
-	}
-	else if (c == '+') {
-		++s;
+	if (*p == '-' || *p == '+') {
+		++p;
 	}
 	//get the digits before the decimal point
-	while ((c = *s++) != '\0' && std::isdigit(c)) {
-		v = v * 10.0 + (static_cast<int>(c) - '0');
+	while (p != pend && std::isdigit(*p)) {
+		vi = vi * 10 + uint64_t(*p - '0');
 		hasDigits = true;
+		++p;
 	}
 	//get the digits after the decimal point
-	if (c == '.' || c == '?') {
-		if (len == 1) { // then it is a value that represent missing or unknown
-			return std::pair<double, double>({ NaN, 0 });
-		}
-		while ((c = *s++) != '\0' && std::isdigit(c)) {
-			v = v * 10.0 + (static_cast<int>(c) - '0');
-			p--;
+	if (*p == '.') {
+		++p;
+		while (p != pend && std::isdigit(*p)) {
+			vi = vi * 10 + uint64_t(*p - '0');
+			exponent--;
 			hasDigits = true;
+			++p;
 		}
 	}
 	//get the digits that belong to the exponent
-	if ((c == 'e' || c == 'E') && hasDigits) {
-		int sign = 1;
-		int m = 0;
-		c = *s++;
-		if (c == '+') {
-			c = *s++;
+	if ((*p == 'e' || *p == 'E') && hasDigits) {
+		++p;
+		bool sign = (*p == '-');
+		int64_t m{ 0 };
+		if (*p == '-' || *p == '+') {
+			++p;
 		}
-		else if (c == '-') {
-			c = *s++;
-			sign = -1;
+		while (p != pend && std::isdigit(*p)) {
+			m = m * 10 + uint64_t(*p - '0');
+			++p;
 		}
-		while (isdigit(c)) {
-			m = m * 10 + (static_cast<int>(c) - '0');
-			c = *s++;
-		}
-		p += sign * m;
+		m = sign ? -m : m;
+		exponent += m;
 	}
 	// get the digits that belong to the error
-	if (c == '(' && hasDigits) {
-		while ((c = *s++) != '\0' && std::isdigit(c)) { //implicitly breaks out of loop on the trailing ')'
-			e = e * 10.0 + (static_cast<int>(c) - '0');
+	if (*p == '(' && hasDigits) {
+		++p;
+		while (p != pend && std::isdigit(*p)) { 
+			ei = ei * 10 + uint64_t(*p - '0');
+			++p;
 		}
-		extraChar = 1;
+		++p; //special case to get over the final bracket
 	}
+	//if everything is well-formed, we should now be at the end of the string.
+	if (p != pend) {
+		return std::make_pair(NaN, NaN);
+	}
+
+	double v, e;
 	//scale the value and error
-	while (p > 0) {
-		v *= 10.0;
-		e *= 10.0;
-		p--;
+	if (exponent > 0) {
+		v = static_cast<double>(vi) * pow_10[exponent];
+		e = static_cast<double>(ei) * pow_10[exponent];
 	}
-	while (p < 0) {
-		v *= 0.1;
-		e *= 0.1;
-		p++;
+	else if (exponent < 0) {
+		v = static_cast<double>(vi) / pow_10[-exponent];
+		e = static_cast<double>(ei) / pow_10[-exponent];
 	}
+	else
+	{
+		v = static_cast<double>(vi);
+		e = static_cast<double>(ei);
+	}
+
 	//apply the correct sign to the value
-	v *= sgn;
+	v = isNeg ? -v : v;
 
-	unsigned long long end{ reinterpret_cast<unsigned long long>(static_cast<const void*>(s)) };
-	size_t used_len{ static_cast<size_t>((end - beginning) / sizeof(char)) };
-	size_t numChars{ extraChar + used_len - 1 };
-
-	if (numChars != len) {
-		return std::pair<double, double>({ NaN, NaN });
-	}
-
-	return std::pair<double, double>({ v, e });;
+	return std::make_pair(v, e);
 }
 
 std::pair<double, double> row::util::stode(const std::string& s)
 {
-	return stode(s.c_str(), s.size());
+	return stode(s.c_str(), s.c_str() + s.size());
 }
-
+std::pair<double, double> row::util::stode(const std::string_view s)
+{
+	return stode(s.data(), s.data() + s.size());
+}
 std::string& row::util::strip_brackets_i(std::string& s)
 {
 	size_t n{ s.find('(') };
@@ -244,3 +256,118 @@ bool row::util::icompare(const std::string_view sva, const std::string_view svb)
 	}
 	return false;
 }
+
+
+
+
+
+
+
+
+// below this is gratuitously copied from the fast_float library
+bool row::util::is_integer(char c)  noexcept { return c >= '0' && c <= '9'; }
+
+row::util::parsed_number_string row::util::parse_number_string(const char* p, const char* pend)
+{
+	parsed_number_string answer;
+
+	if ((*p == '?' || *p == '.') && pend - p == 1) {
+		return answer;
+	}
+
+	answer.negative = (*p == '-');
+
+	if (*p == '-' || *p == '+') {
+		++p;
+		if (p == pend) {
+			return answer;
+		}
+		if (!is_integer(*p) && (*p != '.')) { // a sign must be followed by an integer or the dot
+			return answer;
+		}
+	}
+	const char* const start_digits = p;
+
+	uint64_t vi{ 0 }; // an unsigned int avoids signed overflows (which are bad) "value integer"
+	while ((p != pend) && is_integer(*p)) {  //this is getting the digits before the decimal point
+		vi = 10 * vi + uint64_t(*p - '0'); // might overflow
+		++p;
+	}
+	const char* const end_of_integer_part = p;
+	int64_t digit_count = int64_t(end_of_integer_part - start_digits);
+	answer.integer = byte_span(start_digits, size_t(digit_count));
+	
+	int64_t exponent{ 0 };	
+	if ((p != pend) && (*p == '.')) { //this is getting the digits after the decimal point
+		++p;
+		const char* before = p;
+
+		while ((p != pend) && is_integer(*p)) {
+			uint8_t digit = uint8_t(*p - '0');
+			vi = vi * 10 + digit; // might overflow
+			++p;
+		}
+
+		exponent = before - p;
+		answer.fraction = byte_span(before, size_t(p - before));
+		digit_count -= exponent;
+	}
+	// we must have encountered at least one integer!
+	if (digit_count == 0) {
+		return answer;
+	}
+
+	int64_t exp_number{ 0 };            // explicit exponential part
+	if ((p != pend) && ((*p == 'e') || (*p == 'E'))) {
+		const char* location_of_e{ p };
+		++p;
+		bool neg_exp{ false };
+		if ((p != pend) && (*p=='-')) {
+			neg_exp = true;
+			++p;
+		}
+		else if ((p != pend) && (*p=='+')) { 
+			++p;
+		}
+
+		if ((p == pend) || !is_integer(*p)) {
+			p = location_of_e;
+		}
+		else {
+			while ((p != pend) && is_integer(*p)) {
+				uint8_t digit = uint8_t(*p - '0');
+				if (exp_number < 0x10000000) {
+					exp_number = 10 * exp_number + digit;
+				}
+				++p;
+			}
+			if (neg_exp) { exp_number = -exp_number; }
+			exponent += exp_number;
+		}
+	}
+
+	int64_t ei{ 0 };            // explicit uncertainty term: 1.234e-04(3) <- the bit in brackets. It cannot contain a sign, decimal point, or explicit exponent   ei == "error integer"
+	if ((p != pend) && (*p == '(')) {
+		++p;
+		const char* before = p;
+		while ((p != pend) && is_integer(*p)) {
+			ei = ei * 10 + uint64_t(*p - '0'); // might overflow
+			++p;
+		}
+		if(*p == ')'){
+			answer.errint = byte_span(before, size_t(p - before));
+			++p; //to point past the bracket
+		}
+		else{
+			return answer;
+		}	
+	}
+
+	answer.lastmatch = p;
+	answer.valid = true;
+	answer.exponent = exponent;
+	answer.mantissa = vi;
+	answer.error_mantissa = ei;
+	return answer;
+}
+
