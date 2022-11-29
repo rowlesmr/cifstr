@@ -14,6 +14,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string_view>
+#include <cmath>
 
 #include "ctre/ctre.hpp"
 

@@ -206,10 +206,11 @@ const Vec3 Vec3::operator-(const Vec3& other) const
 
 UnitCellVectors::UnitCellVectors(double av, double bv, double cv, double alv, double bev, double gav)
 {
+	// taken from http://gisaxs.com/index.php/Unit_cell
 	a = Vec3(av);
 	b = Vec3(bv * std::cos(gav * deg), bv * std::sin(gav * deg));
 	double n = (std::cos(alv * deg) - (std::cos(gav * deg) * std::cos(bev * deg))) / std::sin(gav * deg);
-	c = Vec3(cv * std::cos(bev * deg), cv * n, std::sqrt(std::sin(alv * deg) * std::sin(alv * deg) - n * n));
+	c = Vec3(cv * std::cos(bev * deg), cv * n, cv * std::sqrt(1 - pow(std::cos(bev * deg),2) - pow(n,2)));
 
 	double inv_vol{ 1 / triple_product(a, b, c) };
 
