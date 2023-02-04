@@ -19,6 +19,7 @@
 #include "ctre/ctre.hpp"
 
 #include "row/pdqciflib.hpp"
+#include "vec3.hpp"
 
 
 using namespace row;
@@ -87,31 +88,9 @@ std::vector<std::string> make_frac(std::vector<std::string> v);
 std::vector<std::string> make_frac(std::vector<std::string> coords, const std::vector<std::string>& labels);
 
 
-struct Vec3 {
-public:
-    double x;
-    double y;
-    double z;
-
-    Vec3(double u = 0.0, double v = 0.0, double w = 0.0);
-
-    Vec3 cross_product(const Vec3& other) const;
-    Vec3 cross(const Vec3& other) const;
-    double dot_product(const Vec3& other) const;
-    double dot(const Vec3& other) const;
-    double square_magnitude() const;
-    double magnitude() const;
-
-    const Vec3 operator+(const Vec3& other) const;
-    const Vec3 operator-(const Vec3& other) const;
-};
-double triple_product(Vec3 a, Vec3 b, Vec3 c);
-const Vec3 operator*(double scalar, const Vec3& vec);
-const Vec3 operator*(const Vec3& vec, double scalar);
-const Vec3 operator/(const Vec3& vec, double scalar);
 
 
-struct UnitCellVectors {
+class UnitCellVectors {
 public:
     //real space vectors
     Vec3 a;

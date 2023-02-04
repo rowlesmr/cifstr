@@ -22,6 +22,10 @@
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\cifstr.cpp" />
     <ClCompile Include="src\cifstr.hpp" />
+    <ClCompile Include="src\vec3.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\vec3.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
