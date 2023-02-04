@@ -243,10 +243,12 @@ UnitCell::UnitCell(const row::cif::Block& block)
 	usv = UnitCellVectors(a, b, c, al, be, ga);
 }
 
-UnitCell::UnitCell(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav) : a_s{ strip_brackets(std::move(av)) }, b_s{ strip_brackets(std::move(bv)) }, c_s{ strip_brackets(std::move(cv)) },
-al_s{ strip_brackets(std::move(alv)) }, be_s{ strip_brackets(std::move(bev)) }, ga_s{ strip_brackets(std::move(gav)) },
-a{ stode(a_s).first }, b{ stode(b_s).first }, c{ stode(c_s).first }, al{ stode(al_s).first }, be{ stode(be_s).first }, ga{ stode(ga_s).first },
-crystal_system{ deduce_symmetry() }, usv{ UnitCellVectors(a,b,c,al,be,ga) }
+UnitCell::UnitCell(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav) 
+	: a_s{ strip_brackets(std::move(av)) }, b_s{ strip_brackets(std::move(bv)) }, c_s{ strip_brackets(std::move(cv)) },
+	  al_s{ strip_brackets(std::move(alv)) }, be_s{ strip_brackets(std::move(bev)) }, ga_s{ strip_brackets(std::move(gav)) },
+	  a{ stode(a_s).first }, b{ stode(b_s).first }, c{ stode(c_s).first }, 
+	  al{ stode(al_s).first }, be{ stode(be_s).first }, ga{ stode(ga_s).first },
+	  crystal_system{ deduce_symmetry() }, usv{ UnitCellVectors(a,b,c,al,be,ga) }
 {
 
 }
@@ -317,8 +319,9 @@ CrystalSystem UnitCell::deduce_symmetry() const
 	return CrystalSystem::Triclinic;
 }
 
-Site::Site(std::string t_label, std::string t_x, std::string t_y, std::string t_z, std::string t_atom, std::string t_occ, std::string t_beq) : label{ std::move(t_label) }, x{ std::move(t_x) }, y{ std::move(t_y) }, z{ std::move(t_z) },
-atom{ std::move(t_atom) }, occ{ std::move(t_occ) }, beq{ std::move(t_beq) }
+Site::Site(std::string t_label, std::string t_x, std::string t_y, std::string t_z, std::string t_atom, std::string t_occ, std::string t_beq) 
+	: label{ std::move(t_label) }, x{ std::move(t_x) }, y{ std::move(t_y) }, z{ std::move(t_z) },
+	  atom{ std::move(t_atom) }, occ{ std::move(t_occ) }, beq{ std::move(t_beq) }
 {
 	std::replace(label.begin(), label.end(), '\'', 'p'); //can't contain a "'", as this is a comment character in TOPAS
 }
