@@ -22,9 +22,11 @@
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\cifstr.cpp" />
     <ClCompile Include="src\cifstr.hpp" />
+    <ClCompile Include="src\unitcell.cpp" />
     <ClCompile Include="src\vec3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\unitcell.hpp" />
     <ClInclude Include="src\vec3.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
