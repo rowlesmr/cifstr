@@ -94,7 +94,7 @@ bool is_valid_value(const std::string& value)
 }
 
 
-std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(false)
+std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 {
 	const std::vector<std::string>& labels = block.getValue("_atom_site_label").getStrings();
 	std::vector<std::string> beqs{};
@@ -119,7 +119,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(
 			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
 			is_valid_value(block.getValue("_atom_site_aniso_B_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
 		{
-			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			double B11{ block.getValue("_atom_site_aniso_B_11").getDoubles()[aniso_label_idx] };
 			double B22{ block.getValue("_atom_site_aniso_B_22").getDoubles()[aniso_label_idx] };
 			double B33{ block.getValue("_atom_site_aniso_B_33").getDoubles()[aniso_label_idx] };
@@ -132,7 +132,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(
 			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
 			is_valid_value(block.getValue("_atom_site_aniso_U_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
 		{
-			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			double B11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
 			double B22{ block.getValue("_atom_site_aniso_U_22").getDoubles()[aniso_label_idx] };
 			double B33{ block.getValue("_atom_site_aniso_U_33").getDoubles()[aniso_label_idx] };
@@ -145,7 +145,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(
 			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
 			is_valid_value(block.getValue("_atom_site_aniso_beta_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
 		{
-			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			const double mas{ usv.as.square_magnitude() };
 			const double mbs{ usv.bs.square_magnitude() };
 			const double mcs{ usv.cs.square_magnitude() };

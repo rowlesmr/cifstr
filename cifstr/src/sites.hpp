@@ -195,9 +195,7 @@ private:
 
     std::vector<std::string> get_atoms(const row::cif::Block& block);
     std::vector<std::string> get_occs(const row::cif::Block& block);
-    std::vector<std::string> get_Beqs(const row::cif::Block& block) noexcept(false);
-
-	std::string get_Beq(const row::cif::Block& block, const std::string& label) noexcept(false);
+	std::vector<std::string> get_Beqs(const row::cif::Block& block);
 
 	std::string create_string() const;
 };

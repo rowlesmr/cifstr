@@ -47,7 +47,7 @@ void info() {
 	"The unit cell parameters are taken from '_cell_length_a', '_cell_length_b', '_cell_length_c',\n"
 	"'_cell_angle_alpha', '_cell_angle_beta', and '_cell_angle_gamma'. Some comparisons are made to\n"
 	"enable some standard macros to be used (eg Cubic, Tetragonal...). In any of these fail, then all\n"
-	"parameters are given as a fail safe.\n"
+	"parameters are given as a fail-safe.\n"
 	"\n"
 	"The space_group is taken from '_symmetry_space_group_name_H-M', '_space_group_name_H-M_alt',\n"
 	"'_symmetry_Int_Tables_number', or '_space_group_IT_number', in that order. If none of these keys\n"
@@ -56,7 +56,7 @@ void info() {
 	"\n"
 	"The atomic sites are constructed as follows: The site names are taken from '_atom_site_label',\n"
 	"with the fractional x, y, and z coordinates given by '_atom_site_fract_x', '_y', and '_z'.\n"
-	"If the decimal values of the fractional coordinates are consistent with the fractions 1/6, 1/3, 2/3,\n"
+	"If the decimal values of the fractional coordinates are consistent with the fractions +/- 1/6, 1/3, 2/3,\n"
 	"or 5/6, then the decimal value is replaced by the fractions.\n"
 	"\n"
 	"The site occupancy is given by '_atom_site_occupancy', or by '1', if that key is not given.\n"
@@ -67,7 +67,7 @@ void info() {
 	"is used. An attempt is also made to reorder the charge given on an atom, to ensure it is compatible with\n"
 	"TOPAS ordering, eg Fe+2, not Fe2+.\n"
 	"\n"
-	"Isotropic Atomic Displacement Parameters(ADPs; Biso), are taken from '_atom_site_B_iso_or_equiv', or\n"
+	"Isotropic Atomic Displacement Parameters (ADPs; Biso), are taken from '_atom_site_B_iso_or_equiv', or\n"
 	"from '_atom_site_U_iso_or_equiv'. Uiso values are multiplied by 8*Pi^2 to give B values.\n"
 	"If anisotropic ADPs are given, then '_atom_site_aniso_B_11', '_atom_site_aniso_B_22', and\n"
 	"'_atom_site_aniso_B_33' are averaged to give an equivalent Biso value. Alternatively, the equivalent\n"
@@ -123,7 +123,6 @@ void print_block_to_file(const std::string& name, const std::string& source, con
     catch (std::exception& e) {
 		std::cerr << e.what() << '\n';
 		std::cerr << "Continuing...\n";
-
     }
 	return;
 }
@@ -176,8 +175,5 @@ int main(int argc, char* argv[])
         }   
     }
 
-
 	std::cout << "Thanks for using cifstr. For feedback, please contact rowlesmr@gmail.com\n";
-
 }
-
