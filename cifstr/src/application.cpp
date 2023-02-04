@@ -1,15 +1,31 @@
 
+#define _SILENCE_CXX20_CISO646_REMOVED_WARNING
 
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
-#include <format>
+#include <sstream>
 #include <string>
-#include <filesystem>
+#include <array>
+#include <unordered_map>
+#include <format>
+#include <numbers>
+#include <algorithm>
+#include <optional>
+#include <stdexcept>
+#include <string_view>
+#include <cmath>
+
+
+
 #include "argparse/argparse.hpp"
 
 #include "row/pdqciflib.hpp"
-#include "cifstr.hpp"
+#include "util.hpp"
+#include "vec3.hpp"
+#include "unitcell.hpp"
+#include "sites.hpp"
+#include "crystal_structure.hpp"
+
 
 
 
@@ -88,7 +104,7 @@ struct MyArgs : public argparse::Args {
     bool& add_stuff = flag("s,stuff", "Add in the scale factor and other nice stuff to make the STR immediately useable."); 
     bool& do_all_blocks = flag("a,all", "Do all the blocks in all the input_files.");                                       
     bool& write_many_files = flag("m,many", "Output each block as its own STR file. Uses output_file as the basename");     
-    int& verbosity = kwarg("v,verbosity", "Verbosity of screen output: 0|1|2").set_default(1);
+    //int& verbosity = kwarg("v,verbosity", "Verbosity of screen output: 0|1|2").set_default(1);
     bool& print_info = flag("i,info", "Print information about what the program does.");                                       
 
     bool& printargs = flag("print", "A flag to toggle printing the argument values. Useful for debugging.");
@@ -98,17 +114,16 @@ struct MyArgs : public argparse::Args {
     }
 };
 
-void print_block_to_file(const std::string& name, const std::string& source, const row::cif::Block& block, int verbosity, bool stuff, std::ofstream& out) {
+void print_block_to_file(const std::string& name, const std::string& source, const row::cif::Block& block, bool stuff, std::ofstream& out) {
     try {
-        if (verbosity > 0) { std::cout << name << '\n'; }
-        CrystalStructure str(block, name, source, verbosity, stuff);
+        std::cout << name << '\n';
+        CrystalStructure str(block, name, source, stuff);
         out << str.to_string() << '\n';
     }
     catch (std::exception& e) {
-		if (verbosity > 0) {
-			std::cerr << e.what() << '\n';
-			std::cerr << "Continuing...\n";
-		}
+		std::cerr << e.what() << '\n';
+		std::cerr << "Continuing...\n";
+
     }
 	return;
 }
@@ -135,17 +150,16 @@ int main(int argc, char* argv[])
 
     for (const std::string& file : args.src_path) { 
         try {
-            if (args.verbosity > 0) {
-                std::cout << std::format("--------------------\nNow reading {0}. Block(s):\n", file);
-            }
-            row::cif::Cif cif = row::cif::read_file(file, false, args.verbosity > 0);
+			std::cout << std::format("--------------------\nNow reading {0}. Block(s):\n", file);
+
+            row::cif::Cif cif = row::cif::read_file(file, false);
             if (args.do_all_blocks) {
                 for (const auto& [name, block] : cif) {
                     if (args.write_many_files) {
                         fout.close();; //close the previous instance
                         fout.open(args.dst_path + name + ".str");
                     }
-                    print_block_to_file(name, cif.getSource(), block, args.verbosity, args.add_stuff, fout);
+                    print_block_to_file(name, cif.getSource(), block, args.add_stuff, fout);
                 }
             }
             else {
@@ -153,21 +167,17 @@ int main(int argc, char* argv[])
                     fout.close();; //close the previous instance
                     fout.open(args.dst_path + cif.getLastBlockName() + ".str");
                 }
-                print_block_to_file(cif.getLastBlockName(), cif.getSource(), cif.getLastBlock(), args.verbosity, args.add_stuff, fout);
+                print_block_to_file(cif.getLastBlockName(), cif.getSource(), cif.getLastBlock(), args.add_stuff, fout);
             }
         }
         catch (std::runtime_error& e) {
-			if (args.verbosity > 0) {
-				std::cerr << e.what() << '\n';
-				std::cerr << "Continuing with next file...\n";
-			}
+			std::cerr << e.what() << '\n';
+			std::cerr << "Continuing with next file...\n";
         }   
     }
 
-    if (args.verbosity > 0) {
-        std::cout << "Thanks for using cifstr. For feedback, please contact rowlesmr@gmail.com\n";
-    }
 
+	std::cout << "Thanks for using cifstr. For feedback, please contact rowlesmr@gmail.com\n";
 
 }
 

@@ -30,12 +30,24 @@
     <ClCompile Include="src\unitcell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\crystal_structure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sites.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vec3.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\unitcell.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\crystal_structure.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sites.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

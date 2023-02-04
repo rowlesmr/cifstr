@@ -1,3 +1,5 @@
+#define _SILENCE_CXX20_CISO646_REMOVED_WARNING
+
 #include <cmath>
 #include "util.hpp"
 #include "vec3.hpp"
@@ -129,6 +131,7 @@ bool operator!=(const Vec3& vec, const Vec3& other)
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec)
 {
 	stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+	return stream;
 }
 
 

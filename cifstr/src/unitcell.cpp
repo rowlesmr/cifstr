@@ -1,3 +1,5 @@
+#define _SILENCE_CXX20_CISO646_REMOVED_WARNING
+
 #include "unitcell.hpp"
 
 
@@ -19,27 +21,30 @@ UnitCellVectors::UnitCellVectors(double av, double bv, double cv, double alv, do
 
 UnitCell::UnitCell(std::string av, std::string bv, std::string cv, std::string alv, std::string bev, std::string gav)
 {
-	cell_lengths_s[0] = std::move(av);
-	cell_lengths_s[1] = std::move(bv);
-	cell_lengths_s[2] = std::move(cv);
-	cell_angles_s[0] = std::move(alv);
-	cell_angles_s[1] = std::move(bev);
-	cell_angles_s[2] = std::move(gav);
+	cell_lengths_s[0] = av;
+	cell_lengths_s[1] = bv;
+	cell_lengths_s[2] = cv;
+	cell_angles_s[0] = alv;
+	cell_angles_s[1] = bev;
+	cell_angles_s[2] = gav;
 
 	crystal_system = deduce_symmetry();
 	usv = UnitCellVectors(stod(cell_lengths_s[0]), stod(cell_lengths_s[1]), stod(cell_lengths_s[2]),
 		stod(cell_angles_s[0]), stod(cell_angles_s[1]), stod(cell_angles_s[2]));
+
 }
 
 UnitCell::UnitCell(const row::cif::Block& block)
-{
-	UnitCell(row::util::strip_brackets(block.getValue("_cell_length_a").getStrings()[0]),
+	: UnitCell(row::util::strip_brackets(block.getValue("_cell_length_a").getStrings()[0]),
 		row::util::strip_brackets(block.getValue("_cell_length_b").getStrings()[0]),
 		row::util::strip_brackets(block.getValue("_cell_length_c").getStrings()[0]),
 		row::util::strip_brackets(block.getValue("_cell_angle_alpha").getStrings()[0]),
 		row::util::strip_brackets(block.getValue("_cell_angle_beta").getStrings()[0]),
-		row::util::strip_brackets(block.getValue("_cell_angle_gamma").getStrings()[0]));
+		row::util::strip_brackets(block.getValue("_cell_angle_gamma").getStrings()[0]))
+{
+
 }
+
 const UnitCellVectors& UnitCell::get_unitcellvectors() const
 {
 	return usv;
@@ -111,7 +116,6 @@ CrystalSystem UnitCell::deduce_symmetry() const
 	{
 		return CrystalSystem::Monoclinic_al;
 	}
-
 	return CrystalSystem::Triclinic; //no test for this so that it can capture anything that falls through gaps.
 	// eg an orthorhombic cell with two edges the same length.
 }

@@ -22,10 +22,14 @@
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\cifstr.cpp" />
     <ClCompile Include="src\cifstr.hpp" />
+    <ClCompile Include="src\crystal_structure.cpp" />
+    <ClCompile Include="src\sites.cpp" />
     <ClCompile Include="src\unitcell.cpp" />
     <ClCompile Include="src\vec3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\crystal_structure.hpp" />
+    <ClInclude Include="src\sites.hpp" />
     <ClInclude Include="src\unitcell.hpp" />
     <ClInclude Include="src\vec3.hpp" />
   </ItemGroup>
