@@ -2,6 +2,7 @@
 #define _SILENCE_CXX20_CISO646_REMOVED_WARNING
 
 #include <string>
+#include <stdexcept>
 
 #include "ctre/ctre.hpp"
 
@@ -190,18 +191,15 @@ public:
 private:
     std::vector<Site> m_sites{};
     std::string m_ss{};
+	UnitCellVectors usv{};
 
-    static std::optional<std::vector<std::string>> get_Biso(const row::cif::Block& block);
-    static std::optional<std::vector<std::string>> get_Uiso_as_B(const row::cif::Block& block);
-    static std::optional<std::vector<std::string>> get_Baniso_as_B(const row::cif::Block& block);
-    static std::optional<std::vector<std::string>> get_Uaniso_as_B(const row::cif::Block& block);
-    static std::optional<std::vector<std::string>> get_BEaniso_as_B(const row::cif::Block& block);
-    static std::unordered_map<std::string, std::string> make_beq_dict(const row::cif::Block& block, const std::string& b_type);
     static std::vector<std::string> get_atoms(const row::cif::Block& block);
     static std::vector<std::string> get_occs(const row::cif::Block& block);
     static std::vector<std::string> get_Beqs(const row::cif::Block& block) noexcept(false);
 
-    std::string create_string() const;
+	std::string get_Beq(const row::cif::Block& block, const std::string& label) noexcept(false);
+
+	std::string create_string() const;
 };
 
 
