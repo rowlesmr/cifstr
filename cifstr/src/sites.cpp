@@ -87,165 +87,89 @@ std::vector<std::string> Sites::get_occs(const row::cif::Block& block)
 	return row::util::pad_column_i(row::util::strip_brackets_i(occs));
 }
 
+
+bool is_valid_value(const std::string& value)
+{
+	return !(value == "." || value == "?");
+}
+
+
 std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block) noexcept(false)
 {
-	static const std::array<std::string, 5> beq_types{ "b_iso", "u_iso", "b_aniso", "u_aniso", "be_aniso" };
-	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> all_beqs{};
-	for (const std::string& beq : beq_types)
-	{
-		all_beqs[beq] = make_beq_dict(block, beq);
-	}
-
 	const std::vector<std::string>& labels = block.getValue("_atom_site_label").getStrings();
 	std::vector<std::string> beqs{};
 	beqs.reserve(labels.size());
+	std::string r{ "1." };
 
-	for (const std::string& label : labels)
+	auto it{ labels.begin() };
+	for (auto i{ 0 }; i < labels.size(); ++i)
 	{
-		bool found = false;
-		for (const std::string& beq : beq_types)
+		if (block.contains("_atom_site_B_iso_or_equiv") && is_valid_value(block.getValue("_atom_site_B_iso_or_equiv").getStrings()[i]))
 		{
-			auto it = all_beqs[beq].find(label);
-			if (it == all_beqs[beq].end())
-				continue;
-
-			found = true;
-			if (beq == beq_types[1])
-				std::cout << std::format("beq value for site {0} calculated from isotropic U value.\n", label);
-			else if (beq == beq_types[2])
-				std::cout << std::format("beq value for site {0} calculated from anisotropic B values.\n", label);
-			else if (beq == beq_types[3])
-				std::cout << std::format("beq value for site {0} calculated from anisotropic U values.\n", label);
-			else if (beq == beq_types[4])
-				std::cout << std::format("beq value for site {0} calculated from anisotropic beta values.\n", label);
-
-			if ((it->second).starts_with('-'))
-			{
-				std::cout << std::format("Negative atomic displacement parameter detected for site {0}! Please check.\n", label);
-			}
-			beqs.push_back(it->second);
-			break;
+			r = row::util::strip_brackets(block.getValue("_atom_site_B_iso_or_equiv").getStrings()[i]);
 		}
-		if (!found)
+		else if (block.contains("_atom_site_U_iso_or_equiv") && is_valid_value(block.getValue("_atom_site_U_iso_or_equiv").getStrings()[i]))
 		{
-			std::cout << std::format("beq value missing or zero for site {0}! Default value of '1.' entered.\n", label);
-			beqs.emplace_back("1.");
+			double d = block.getValue("_atom_site_U_iso_or_equiv").getDoubles()[i];
+			r = std::format("{:.3f}", d * as_B);
+			std::cout << std::format("beq value for site {0} calculated from isotropic U value.\n", labels[i]);
 		}
+		else if (block.contains("_atom_site_aniso_B_11") &&
+			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
+			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
+			is_valid_value(block.getValue("_atom_site_aniso_B_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		{
+			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			double B11{ block.getValue("_atom_site_aniso_B_11").getDoubles()[aniso_label_idx] };
+			double B22{ block.getValue("_atom_site_aniso_B_22").getDoubles()[aniso_label_idx] };
+			double B33{ block.getValue("_atom_site_aniso_B_33").getDoubles()[aniso_label_idx] };
+			double d{ (B11 + B22 + B33) / 3.0 };
+			r = std::format("{:.3f}", d);
+			std::cout << std::format("beq value for site {0} calculated from anisotropic B values.\n", labels[i]);
+		}
+		else if (block.contains("_atom_site_aniso_U_11") &&
+			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
+			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
+			is_valid_value(block.getValue("_atom_site_aniso_U_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		{
+			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			double B11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
+			double B22{ block.getValue("_atom_site_aniso_U_22").getDoubles()[aniso_label_idx] };
+			double B33{ block.getValue("_atom_site_aniso_U_33").getDoubles()[aniso_label_idx] };
+			double d{ (B11 + B22 + B33) / 3.0 };
+			r = std::format("{:.3f}", d * as_B);
+			std::cout << std::format("beq value for site {0} calculated from anisotropic U values.\n", labels[i]);
+		}
+		else if (block.contains("_atom_site_aniso_beta_11") &&
+			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
+			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
+			is_valid_value(block.getValue("_atom_site_aniso_beta_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		{
+			const size_t aniso_label_idx{ it - block.getValue("_atom_site_aniso_label").getStrings().begin() };
+			const double mas{ usv.as.square_magnitude() };
+			const double mbs{ usv.bs.square_magnitude() };
+			const double mcs{ usv.cs.square_magnitude() };
+
+			double B11{ 4.0 * block.getValue("_atom_site_aniso_beta_11").getDoubles()[aniso_label_idx] / mas };
+			double B22{ 4.0 * block.getValue("_atom_site_aniso_beta_22").getDoubles()[aniso_label_idx] / mbs };
+			double B33{ 4.0 * block.getValue("_atom_site_aniso_beta_33").getDoubles()[aniso_label_idx] / mcs };
+			double d{ (B11 + B22 + B33) / 3.0 };
+			r = std::format("{:.3f}", d);
+			std::cout << std::format("beq value for site {0} calculated from anisotropic beta values.\n", labels[i]);
+		}
+		else
+		{
+			std::cout << std::format("beq value missing or zero for site {0}! Default value of '1.' entered.\n", labels[i]);
+		}
+
+		if (r[0] == '-')
+			std::cout << std::format("Negative atomic displacement parameter detected for site {0}! Please check.\n", labels[i]);
+		beqs.push_back(r);
 	}
+
 	return row::util::pad_column_i(beqs);
 }
 
-
-std::string Sites::get_Beq(const row::cif::Block& block, const std::string& label) noexcept(false)
-{
-	const std::vector<std::string>& labels = block.getValue("_atom_site_label").getStrings();
-	auto it = find(labels.begin(), labels.end(), label);
-	const size_t label_idx = (it != labels.end()) ? it - labels.begin() : -1;
-
-	std::string r{ "1." };
-
-	if (label_idx != -1)
-		throw std::out_of_range(std::format("Site {0} not found.\n", label));
-
-	if (block.contains("_atom_site_B_iso_or_equiv"))
-	{
-		const std::vector<std::string>& adps{ block.getValue("_atom_site_B_iso_or_equiv").getStrings() };
-		if (adps[label_idx] != "." || adps[label_idx] != "?")
-		{
-			r = row::util::strip_brackets(adps[label_idx]);
-			goto return_section;
-		}
-	}
-
-	if (block.contains("_atom_site_U_iso_or_equiv"))
-	{
-		const std::vector<std::string>& adps{ block.getValue("_atom_site_U_iso_or_equiv").getStrings() };
-		if (adps[label_idx] != "." || adps[label_idx] != "?")
-		{
-			double d = row::util::stode(adps[label_idx]).first;
-			std::cout << std::format("beq value for site {0} calculated from isotropic U value.\n", label);
-			r = std::format("{:.3f}", d * as_B);
-			goto return_section;
-		}
-	}
-
-	if (block.contains("_atom_site_aniso_B_11"))
-	{
-		const std::vector<std::string>& aniso_labels = block.getValue("_atom_site_aniso_label").getStrings();
-		auto aniso_it = find(aniso_labels.begin(), aniso_labels.end(), label);
-		const size_t aniso_label_idx = (aniso_it != aniso_labels.end()) ? aniso_it - aniso_labels.begin() : -1;
-		if (aniso_label_idx != -1)
-		{
-			const std::vector<std::string>& adps{ block.getValue("_atom_site_aniso_B_11").getStrings() };
-			if (adps[aniso_label_idx] != "." || adps[aniso_label_idx] != "?")
-			{
-				double B11{ block.getValue("_atom_site_aniso_B_11").getDoubles()[aniso_label_idx] };
-				double B22{ block.getValue("_atom_site_aniso_B_22").getDoubles()[aniso_label_idx] };
-				double B33{ block.getValue("_atom_site_aniso_B_33").getDoubles()[aniso_label_idx] };
-				double d{ (B11 + B22 + B33) / 3.0 };
-				std::cout << std::format("beq value for site {0} calculated from anisotropic B values.\n", label);
-				r = std::format("{:.3f}", d);
-				goto return_section;
-			}
-		}
-	}
-
-	if (block.contains("_atom_site_aniso_U_11"))
-	{
-		const std::vector<std::string>& aniso_labels = block.getValue("_atom_site_aniso_label").getStrings();
-		auto aniso_it = find(aniso_labels.begin(), aniso_labels.end(), label);
-		const size_t aniso_label_idx = (aniso_it != aniso_labels.end()) ? aniso_it - aniso_labels.begin() : -1;
-		if (aniso_label_idx != -1)
-		{
-			const std::vector<std::string>& adps{ block.getValue("_atom_site_aniso_U_11").getStrings() };
-			if (adps[aniso_label_idx] != "." || adps[aniso_label_idx] != "?")
-			{
-				double U11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
-				double U22{ block.getValue("_atom_site_aniso_U_22").getDoubles()[aniso_label_idx] };
-				double U33{ block.getValue("_atom_site_aniso_U_33").getDoubles()[aniso_label_idx] };
-				double d{ (U11 + U22 + U33) / 3.0 };
-				std::cout << std::format("beq value for site {0} calculated from anisotropic U values.\n", label);
-				r = std::format("{:.3f}", d * as_B);
-				goto return_section;
-			}
-		}
-	}
-
-	if (block.contains("_atom_site_aniso_beta_11"))
-	{
-		const std::vector<std::string>& aniso_labels = block.getValue("_atom_site_aniso_label").getStrings();
-		auto aniso_it = find(aniso_labels.begin(), aniso_labels.end(), label);
-		const size_t aniso_label_idx = (aniso_it != aniso_labels.end()) ? aniso_it - aniso_labels.begin() : -1;
-		if (aniso_label_idx != -1)
-		{
-			const std::vector<std::string>& adps{ block.getValue("_atom_site_aniso_beta_11").getStrings() };
-			if (adps[aniso_label_idx] != "." || adps[aniso_label_idx] != "?")
-			{
-				const double mas{ usv.as.square_magnitude() };
-				const double mbs{ usv.bs.square_magnitude() };
-				const double mcs{ usv.cs.square_magnitude() };
-
-				double Be11{ 4.0 * block.getValue("_atom_site_aniso_beta_11").getDoubles()[aniso_label_idx] / mas };
-				double Be22{ 4.0 * block.getValue("_atom_site_aniso_beta_22").getDoubles()[aniso_label_idx] / mbs };
-				double Be33{ 4.0 * block.getValue("_atom_site_aniso_beta_33").getDoubles()[aniso_label_idx] / mcs };
-
-				double d{ (Be11 + Be22 + Be33) / 3.0 };
-				std::cout << std::format("beq value for site {0} calculated from anisotropic beta values.\n", label);
-				r = std::format("{:.3f}", d);
-				goto return_section;
-			}
-		}
-	}
-
-	std::cout << std::format("beq value missing or zero for site {0}! Default value of '1.' entered.\n", label);
-
-return_section:
-
-	if (r[0] == '-')
-		std::cout << std::format("Negative atomic displacement parameter detected for site {0}! Please check.\n", label);
-
-	return r;
-}
 
 std::string Sites::create_string() const
 {
