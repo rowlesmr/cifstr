@@ -464,10 +464,12 @@ namespace row::cif {
 		friend constexpr auto operator<=>(const Datavalue& lhs, const Datavalue& rhs) {
 			return lhs.m_strs <=> rhs.m_strs;
 		}
-		friend constexpr void swap(Datavalue& lhs, Datavalue& rhs) noexcept(noexcept(lhs.swap(rhs))) {
-			lhs.swap(rhs);
-		}
 	};
+	constexpr void swap(Datavalue& lhs, Datavalue& rhs) noexcept(noexcept(lhs.swap(rhs)))
+	{
+		lhs.swap(rhs);
+	}
+
 
 
 	class Block {

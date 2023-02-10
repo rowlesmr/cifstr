@@ -14,11 +14,11 @@
 #include <cmath>
 
 
-inline static constexpr double deg{ 180.0 / std::numbers::pi };
+inline static constexpr const double deg{ 180.0 / std::numbers::pi };
 
-inline static constexpr double as_B{ 8 * std::numbers::pi * std::numbers::pi };
+inline static constexpr const double as_B{ 8 * std::numbers::pi * std::numbers::pi };
 
-inline static constexpr std::array<std::string_view, 2> NA_values{ ".", "?" };
+inline static constexpr const std::array<std::string_view, 2> NA_values{ ".", "?" };
 
 inline static constexpr const std::array<std::string_view, 100> elements
 { "Ac", "Ag", "Al", "Am", "Ar", "As", "At", "Au", "Ba", "B",

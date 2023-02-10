@@ -102,7 +102,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 	std::string r{ "1." };
 
 	auto it{ labels.begin() };
-	for (auto i{ 0 }; i < labels.size(); ++i)
+	for (size_t i{ 0 }; i < labels.size(); ++i)
 	{
 		if (block.contains("_atom_site_B_iso_or_equiv") && is_valid_value(block.getValue("_atom_site_B_iso_or_equiv").getStrings()[i]))
 		{
