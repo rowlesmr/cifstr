@@ -146,25 +146,23 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 		}
 		else if ((aniso_label_idx = valid_aniso_info_index(block, "_atom_site_aniso_U_11", labels, i)) != std::numeric_limits<size_t>::max())
 		{
-			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
-			double B11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
-			double B22{ block.getValue("_atom_site_aniso_U_22").getDoubles()[aniso_label_idx] };
-			double B33{ block.getValue("_atom_site_aniso_U_33").getDoubles()[aniso_label_idx] };
-			double d{ (B11 + B22 + B33) / 3.0 };
+			double U11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
+			double U22{ block.getValue("_atom_site_aniso_U_22").getDoubles()[aniso_label_idx] };
+			double U33{ block.getValue("_atom_site_aniso_U_33").getDoubles()[aniso_label_idx] };
+			double d{ (U11 + U22 + U33) / 3.0 };
 			r = std::format("{:.3f}", d * as_B);
 			std::cout << std::format("beq value for site {0} calculated from anisotropic U values.\n", labels[i]);
 		}
 		else if ((aniso_label_idx = valid_aniso_info_index(block, "_atom_site_aniso_beta_11", labels, i)) != std::numeric_limits<size_t>::max())
 		{
-			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			const double mas{ usv.as.square_magnitude() };
 			const double mbs{ usv.bs.square_magnitude() };
 			const double mcs{ usv.cs.square_magnitude() };
 
-			double B11{ 4.0 * block.getValue("_atom_site_aniso_beta_11").getDoubles()[aniso_label_idx] / mas };
-			double B22{ 4.0 * block.getValue("_atom_site_aniso_beta_22").getDoubles()[aniso_label_idx] / mbs };
-			double B33{ 4.0 * block.getValue("_atom_site_aniso_beta_33").getDoubles()[aniso_label_idx] / mcs };
-			double d{ (B11 + B22 + B33) / 3.0 };
+			double be11{ 4.0 * block.getValue("_atom_site_aniso_beta_11").getDoubles()[aniso_label_idx] / mas };
+			double be22{ 4.0 * block.getValue("_atom_site_aniso_beta_22").getDoubles()[aniso_label_idx] / mbs };
+			double be33{ 4.0 * block.getValue("_atom_site_aniso_beta_33").getDoubles()[aniso_label_idx] / mcs };
+			double d{ (be11 + be22 + be33) / 3.0 };
 			r = std::format("{:.3f}", d);
 			std::cout << std::format("beq value for site {0} calculated from anisotropic beta values.\n", labels[i]);
 		}
