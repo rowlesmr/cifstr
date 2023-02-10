@@ -94,6 +94,25 @@ bool is_valid_value(const std::string& value)
 }
 
 
+size_t valid_aniso_info_index(const row::cif::Block& block, const std::string_view tag, const std::vector<std::string>& atom_labels, const int atom_label_num)
+{
+	if (!block.contains(tag))
+		return std::numeric_limits<size_t>::max();
+
+	const auto& aniso_labels{ block.getValue("_atom_site_aniso_label").getStrings() };
+	auto it = find(aniso_labels.begin(), aniso_labels.end(), atom_labels[atom_label_num]);
+	size_t r{ it - aniso_labels.begin() };
+
+	if (r == aniso_labels.size())
+		return std::numeric_limits<size_t>::max();
+
+	if (is_valid_value(block.getValue(tag).getStrings()[r]))
+		return r;
+
+	return std::numeric_limits<size_t>::max();
+}
+
+
 std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 {
 	const std::vector<std::string>& labels = block.getValue("_atom_site_label").getStrings();
@@ -104,6 +123,8 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 	auto it{ labels.begin() };
 	for (size_t i{ 0 }; i < labels.size(); ++i)
 	{
+		size_t aniso_label_idx{ 0 };
+
 		if (block.contains("_atom_site_B_iso_or_equiv") && is_valid_value(block.getValue("_atom_site_B_iso_or_equiv").getStrings()[i]))
 		{
 			r = row::util::strip_brackets(block.getValue("_atom_site_B_iso_or_equiv").getStrings()[i]);
@@ -114,12 +135,8 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 			r = std::format("{:.3f}", d * as_B);
 			std::cout << std::format("beq value for site {0} calculated from isotropic U value.\n", labels[i]);
 		}
-		else if (block.contains("_atom_site_aniso_B_11") &&
-			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
-			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
-			is_valid_value(block.getValue("_atom_site_aniso_B_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		else if ((aniso_label_idx = valid_aniso_info_index(block, "_atom_site_aniso_B_11", labels, i)) != std::numeric_limits<size_t>::max())
 		{
-			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			double B11{ block.getValue("_atom_site_aniso_B_11").getDoubles()[aniso_label_idx] };
 			double B22{ block.getValue("_atom_site_aniso_B_22").getDoubles()[aniso_label_idx] };
 			double B33{ block.getValue("_atom_site_aniso_B_33").getDoubles()[aniso_label_idx] };
@@ -127,10 +144,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 			r = std::format("{:.3f}", d);
 			std::cout << std::format("beq value for site {0} calculated from anisotropic B values.\n", labels[i]);
 		}
-		else if (block.contains("_atom_site_aniso_U_11") &&
-			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
-			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
-			is_valid_value(block.getValue("_atom_site_aniso_U_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		else if ((aniso_label_idx = valid_aniso_info_index(block, "_atom_site_aniso_U_11", labels, i)) != std::numeric_limits<size_t>::max())
 		{
 			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			double B11{ block.getValue("_atom_site_aniso_U_11").getDoubles()[aniso_label_idx] };
@@ -140,10 +154,7 @@ std::vector<std::string> Sites::get_Beqs(const row::cif::Block& block)
 			r = std::format("{:.3f}", d * as_B);
 			std::cout << std::format("beq value for site {0} calculated from anisotropic U values.\n", labels[i]);
 		}
-		else if (block.contains("_atom_site_aniso_beta_11") &&
-			row::util::contains(block.getValue("_atom_site_aniso_label").getStrings(), labels[i]) &&
-			(it = find(block.getValue("_atom_site_aniso_label").getStrings().begin(), block.getValue("_atom_site_aniso_label").getStrings().end(), labels[i])) != block.getValue("_atom_site_aniso_label").getStrings().end() &&
-			is_valid_value(block.getValue("_atom_site_aniso_beta_11").getStrings()[it - block.getValue("_atom_site_aniso_label").getStrings().begin()]))
+		else if ((aniso_label_idx = valid_aniso_info_index(block, "_atom_site_aniso_beta_11", labels, i)) != std::numeric_limits<size_t>::max())
 		{
 			const size_t aniso_label_idx = it - block.getValue("_atom_site_aniso_label").getStrings().begin();
 			const double mas{ usv.as.square_magnitude() };

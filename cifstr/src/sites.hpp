@@ -3,7 +3,7 @@
 
 #include <string>
 #include <stdexcept>
-
+#include <limits>
 #include "ctre/ctre.hpp"
 
 #include "row/pdqciflib.hpp"
